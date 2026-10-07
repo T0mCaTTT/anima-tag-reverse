@@ -1,0 +1,22 @@
+# 统一换行符，避免 Windows 检出把 LF 变成 CRLF 造成整文件 diff
+* text=auto eol=lf
+
+# Windows 批处理必须保持 CRLF，否则老式 cmd 解析可能出错
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 大体积数据文件按二进制处理，不做行尾转换、不参与 diff 高亮
+*.jsonl -text
+anima-tag-kb/tags.json -text
+
+# 二进制资源明确标注
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.zip binary

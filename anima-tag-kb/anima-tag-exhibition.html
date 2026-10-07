@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d14" id="metaTheme">
+<script>
+/* 主题预置：在样式生效前就定好 data-theme，避免刷新时闪白 / 闪黑 */
+(function(){
+  try{
+    var raw = localStorage.getItem('animaKB.theme');   /* LS.set 写入的是 JSON 串 */
+    var t = raw ? raw.replace(/^"|"$/g,'') : '';
+    if(t !== 'light' && t !== 'dark'){
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme','dark'); }
+})();
+</script>
+<title>Anima 标签工作台</title>
+<style>
+  /* ================= 设计令牌 Design Tokens =================
+     深色为默认；html[data-theme="light"] 整体覆盖为日间模式。
+     组件里不再写死颜色/圆角/时长，一律取这里的变量。 */
+  :root{
+    color-scheme:dark;
+    --bg:#0b0d14; --bg2:#12151f;
+    --bg-art:radial-gradient(1200px 700px at 12% -10%,rgba(124,92,255,.22),transparent 60%),
+             radial-gradient(900px 600px at 100% 0%,rgba(34,211,238,.16),transparent 55%);
+    --panel:rgba(20,24,36,.92); --surface-2:rgba(16,19,30,.94);
+    --glass-bg:rgba(13,16,26,.72); --glass-bg-2:rgba(11,13,20,.86);
+    --glass-brd:rgba(255,255,255,.12); --glass-in:inset 0 1px 0 rgba(255,255,255,.07);
+    --glass-blur:blur(22px) saturate(1.7);
+    --soft:rgba(255,255,255,.06); --soft-2:rgba(255,255,255,.04); --hover:rgba(255,255,255,.12);
+    --code-bg:#0a0c14; --pic-bg:#0e1120; --card-img-bg:rgba(0,0,0,.38);
+    --card-sh:0 1px 8px rgba(0,0,0,.92);
+    --chip-tx:#fff; --chip-accent:#cbb9ff; --chip-bg:rgba(124,92,255,.16); --chip-brd:rgba(124,92,255,.42);
+    --btn-bg:rgba(124,92,255,.16); --btn-bg-h:rgba(124,92,255,.3); --btn-brd:rgba(124,92,255,.42);
+    --f-bg:rgba(52,211,153,.14); --f-tx:#6ee7b7;
+    --u-bg:rgba(251,191,36,.14); --u-tx:#fcd34d;
+    --s-bg:rgba(34,211,238,.16); --s-tx:#67e8f9;
+    --star-bg:rgba(251,191,36,.14); --star-brd:rgba(251,191,36,.45); --star-tx:#fde68a;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.16);
+    --head-sh:0 8px 28px rgba(0,0,0,.16); --tray-sh:0 -14px 40px rgba(0,0,0,.32);
+    --tx:#e8ecf6; --tx2:#9aa4bd; --tx3:#6b7590; --tx-strong:#fff;
+    --ac:#7c5cff; --ac2:#22d3ee; --ok:#34d399; --warn:#fbbf24; --fav:#fbbf24;
+    --q:#f472b6; --meta:#94a3b8; --era:#fbbf24; --safety:#34d399; --count:#60a5fa;
+    --hair:#f59e0b; --eyes:#38bdf8; --face:#fb7185; --expression:#f0abfc; --attire:#a78bfa;
+    --uniform:#818cf8; --traditional:#c084fc; --accessory:#e879f9; --pose:#2dd4bf;
+    --composition:#22d3ee; --lighting:#facc15; --background:#4ade80; --color:#fb923c;
+    --style:#a3e635; --artist:#ff6b9d; --character:#60a5fa; --series:#818cf8; --negative:#ef4444;
+    /* 圆角：卡片 18 / 面板 16 / 按钮与输入 12 / 小元件 10 / 胶囊 999 */
+    --r1:10px; --r2:12px; --r3:14px; --r4:16px; --r5:18px; --pill:999px; --r:var(--r5);
+    /* 阴影 */
+    --sh:0 18px 50px rgba(0,0,0,.55); --sh-1:0 6px 18px rgba(0,0,0,.38); --sh-2:0 14px 40px rgba(0,0,0,.5);
+    /* 动效：时长 + 曲线（主题切换 .42s / 面板 .26s / 微交互 .15s） */
+    --dur-1:.15s; --dur-2:.26s; --dur-3:.42s;
+    --ease:cubic-bezier(.4,0,.2,1); --ease-out:cubic-bezier(.22,.8,.28,1); --ease-spring:cubic-bezier(.34,1.4,.64,1);
+    --tr:var(--dur-1) var(--ease);
+  }
+  /* ================= 日间模式：冷白中性底 #f5f6fa ================= */
+  html[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f5f6fa; --bg2:#ffffff;
+    --bg-art:radial-gradient(1200px 700px at 10% -12%,rgba(124,92,255,.14),transparent 62%),
+             radial-gradient(900px 600px at 100% 0%,rgba(6,182,212,.12),transparent 58%);
+    --panel:rgba(255,255,255,.94); --surface-2:rgba(255,255,255,.96);
+    --glass-bg:rgba(255,255,255,.7); --glass-bg-2:rgba(255,255,255,.9);
+    --glass-brd:rgba(15,23,42,.1); --glass-in:inset 0 1px 0 #fff;
+    --soft:rgba(15,23,42,.05); --soft-2:rgba(15,23,42,.03); --hover:rgba(15,23,42,.08);
+    --line:rgba(15,23,42,.1); --line2:rgba(15,23,42,.2);
+    --head-sh:0 6px 20px rgba(24,32,64,.08); --tray-sh:0 -10px 28px rgba(24,32,64,.1);
+    --tx:#1b2233; --tx2:#5a6478; --tx3:#8b94a7; --tx-strong:#0f172a;
+    --code-bg:#f1f3f9; --pic-bg:#eef1f8; --card-img-bg:rgba(255,255,255,.74);
+    --card-sh:0 1px 2px rgba(255,255,255,.98),0 2px 12px rgba(255,255,255,.9);
+    --chip-tx:#4c1d95; --chip-accent:#6d28d9; --chip-bg:rgba(109,77,255,.12); --chip-brd:rgba(109,77,255,.34);
+    --btn-bg:rgba(109,77,255,.12); --btn-bg-h:rgba(109,77,255,.22); --btn-brd:rgba(109,77,255,.36);
+    --f-bg:rgba(5,150,105,.12); --f-tx:#047857;
+    --u-bg:rgba(217,119,6,.14); --u-tx:#b45309;
+    --s-bg:rgba(8,145,178,.14); --s-tx:#0e7490;
+    --star-bg:rgba(217,119,6,.14); --star-brd:rgba(217,119,6,.4); --star-tx:#92620a;
+    --ac:#6d4dff; --ac2:#0891b2; --fav:#d97706;
+    --sh:0 16px 40px rgba(24,32,64,.14); --sh-1:0 5px 16px rgba(24,32,64,.1); --sh-2:0 12px 32px rgba(24,32,64,.14);
+  }
+  /* 无毛玻璃能力时的兜底：换成不透明表面 */
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    header{background:var(--bg2)} #tray{background:var(--bg2)} .drawer{background:var(--bg2)} #insp{background:var(--bg2)}
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg-art),var(--bg);
+    background-repeat:no-repeat;
+    color:var(--tx);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    transition:background-color var(--dur-2) var(--ease),color var(--dur-2) var(--ease);
+  }
+  a{color:var(--ac2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font:inherit;color:var(--tx);background:var(--btn-bg);border:1px solid var(--btn-brd);
+    border-radius:var(--r2);padding:8px 13px;cursor:pointer;white-space:nowrap;
+    transition:background var(--tr),border-color var(--tr),color var(--tr),box-shadow var(--tr),transform var(--dur-1) var(--ease)}
+  button:hover{background:var(--btn-bg-h);transform:translateY(-1px);box-shadow:var(--sh-1)}
+  button:active{transform:translateY(0) scale(.98)}
+  button.ghost{background:var(--soft);border-color:var(--line)}
+  button.ghost:hover{background:var(--hover)}
+  button.on{background:rgba(52,211,153,.2);border-color:rgba(52,211,153,.5)}
+  button:disabled{opacity:.45;cursor:default;transform:none}
+  input[type=search],select{
+    font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);
+    padding:9px 12px;outline:none;min-width:180px;
+    transition:border-color var(--tr),box-shadow var(--tr),background var(--tr),color var(--tr)
+  }
+  input[type=search]:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(124,92,255,.18)}
+  header{position:sticky;top:0;z-index:40;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    background:linear-gradient(180deg,var(--glass-bg),var(--glass-bg-2));border-bottom:1px solid var(--glass-brd);
+    box-shadow:var(--glass-in),var(--head-sh);padding:12px 20px 10px;
+    transition:background var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease),box-shadow var(--dur-2) var(--ease)}
+  .hrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:1560px;margin:0 auto}
+  .brand{font-size:17px;font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+  .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:0 0 16px var(--ac)}
+  .sub{color:var(--tx2);font-size:12px}
+  .sub2{color:var(--tx2);font-size:12px;min-height:18px}
+  .sub2:empty{display:none}
+  .grow{flex:1}
+  /* 页头三段式：左（品牌 + 分类栏开关）/ 中（搜索 + 模式 + 分组）/ 右（视图按钮组，收藏在最右） */
+  .hzone{display:flex;align-items:center;gap:10px;min-width:0}
+  .hleft{flex:none}
+  .hmid{flex:1;justify-content:center;min-width:180px}
+  .hright{flex:none;margin-left:auto;justify-content:flex-end}
+  .hmid #q{width:min(440px,40vw);min-width:150px}
+  .hrow.hstats{margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}
+  .railbtn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;
+    border-radius:var(--r2);background:var(--soft-2);border:1px solid var(--line);color:var(--tx2);cursor:pointer;
+    font-size:14px;line-height:1;flex:none;
+    transition:background var(--tr),color var(--tr),border-color var(--tr),transform var(--dur-1) var(--ease)}
+  .railbtn:hover{background:var(--hover);color:var(--tx);transform:translateY(-1px)}
+  .railbtn.on{background:var(--chip-bg);border-color:var(--chip-brd);color:var(--chip-tx)}
+  /* 外壳：左侧一级分类竖栏 + 右侧工作区（参考 ai-tag-toolbox 的 sidebar + main） */
+  .shell{display:flex;align-items:flex-start;max-width:1560px;margin:0 auto;gap:0;position:relative;
+    --rail-w:clamp(200px,16vw,240px);--rail-wmini:66px}
+  .rail{width:var(--rail-w);flex:none;position:sticky;top:var(--rail-top,104px);
+    max-height:calc(100vh - var(--rail-top,104px) - 14px);overflow-y:auto;overscroll-behavior:contain;
+    padding:12px 9px 18px;border-right:1px solid var(--line);scrollbar-width:thin;
+    transition:width var(--dur-2) var(--ease),padding var(--dur-2) var(--ease)}
+  .rail::-webkit-scrollbar{width:6px}
+  .rail::-webkit-scrollbar-thumb{background:var(--line2);border-radius:var(--pill)}
+  .shell.railoff .rail{display:none}
+  /* 拖拽把手：贴在竖栏右缘的 11px 热区，静止时透明、悬停/拖拽时显 2px 强调色 */
+  .railgrip{position:absolute;top:0;bottom:0;left:var(--rail-w);width:11px;transform:translateX(-5px);
+    cursor:col-resize;z-index:6;touch-action:none;border-radius:var(--pill)}
+  .railgrip::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);
+    background:transparent;border-radius:var(--pill);transition:background var(--tr)}
+  .railgrip:hover::after,.railgrip:focus-visible::after,.shell.railresizing .railgrip::after{background:var(--ac)}
+  .railgrip:focus-visible{outline:none}
+  .shell.railresizing{cursor:col-resize;user-select:none}
+  .shell.railresizing .rail{transition:none}
+  .shell.railoff .railgrip{display:none}
+  /* 窄条态：只留图标与活动色条，名称/计数淡出，宽度动画由上面的 transition 负责 */
+  .shell.railmini .rail{width:var(--rail-wmini);padding:12px 6px 18px}
+  .shell.railmini .railhead .clabel,.shell.railmini .cbtn .n{display:none}
+  .shell.railmini .cname{opacity:0;width:0;pointer-events:none}
+  .shell.railmini .cbtn{justify-content:center;padding:7px 2px;gap:0}
+  .shell.railmini .railgrip{display:none}
+  .cname,.cbtn .n,.railhead .clabel{transition:opacity var(--dur-1) var(--ease)}
+  .railmini-btn{width:20px;height:20px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid transparent;border-radius:6px;background:transparent;color:var(--tx3);cursor:pointer;
+    font-size:12px;line-height:1;padding:0;transition:background var(--tr),color var(--tr)}
+  .railmini-btn:hover{background:var(--hover);color:var(--tx)}
+  .shell.railmini .railmini-btn{transform:rotate(180deg)}
+  .railhead{display:flex;align-items:center;gap:8px;padding:0 7px 8px}
+  .railhead .clabel{font-size:11.5px;color:var(--tx3);letter-spacing:.5px;flex:1}
+  .catlist{display:flex;flex-direction:column;gap:2px}
+  /* 一级分类行：整行可点，选中时左侧 3px 色条 + 底色（对应参考 .cat / .cat.on） */
+  .cbtn{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:var(--r2);
+    border:1px solid transparent;border-left:3px solid transparent;background:transparent;color:var(--tx2);
+    font-size:13px;font-weight:500;text-align:left;cursor:pointer;
+    transition:background var(--tr),color var(--tr),border-color var(--tr),box-shadow var(--tr)}
+  .cbtn:hover{background:var(--hover);color:var(--tx)}
+  .cbtn.active{background:var(--chip-bg);border-color:var(--chip-brd);border-left-color:var(--ac);
+    color:var(--chip-tx);font-weight:600;box-shadow:var(--sh-1)}
+  .cico{width:22px;height:22px;border-radius:7px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+  .cbtn.active .cico{background:var(--soft-2)}
+  .cname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cbtn .n{flex:none;font-size:10.5px;font-weight:500;color:var(--tx3);background:var(--soft);
+    border-radius:var(--pill);padding:1px 7px}
+  .cbtn.active .n{color:var(--tx2)}
+  .cbtn.star{background:var(--star-bg);border-color:var(--star-brd);color:var(--star-tx)}
+  .cbtn.star.active{background:var(--star-bg);color:var(--star-tx);border-left-color:var(--fav);border-color:var(--fav)}
+  .catdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:0 0 auto}
+  .railscrim{position:fixed;inset:0;z-index:55;background:rgba(4,6,14,.5);opacity:0;pointer-events:none;
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);transition:opacity var(--dur-2) var(--ease)}
+  .railscrim.on{opacity:1;pointer-events:auto}
+  /* 工作区：工具条（当前分类 + 数量 + 状态 + 清除搜索）→ 二级细分条 → 主区 */
+  .ws{flex:1;min-width:0}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px 4px}
+  .toolbar h2{margin:0;font-size:19px;letter-spacing:.3px;display:flex;align-items:center;gap:9px}
+  .toolbar .cnt{font-size:11.5px;padding:2px 10px;border-radius:var(--pill);background:var(--soft);color:var(--tx2)}
+  .toolbar .sp{flex:1}
+  .toolbar .sub2{color:var(--tx2);font-size:12px}
+  /* 二级细分：选中一级后才出现（参考 #subcatNav 的按需出现规则） */
+  .subcat-nav{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:2px 20px 8px;scrollbar-width:thin}
+  .subcat-nav[hidden]{display:none}
+  .subcat-nav::-webkit-scrollbar{height:5px}
+  .subcat-nav::-webkit-scrollbar-thumb{background:var(--line2);border-radius:var(--pill)}
+  .subcat-nav .clabel{font-size:11.5px;color:var(--tx3);flex:none;letter-spacing:.5px}
+  .subcat-nav .sep{width:1px;height:16px;background:var(--line2);flex:none;margin:0 3px}
+  .cbtn.sm{width:auto;display:inline-flex;padding:3px 9px;font-size:11.5px;border-radius:var(--r1);
+    background:var(--soft-2);border:1px solid var(--line);border-left-width:1px;font-weight:400;white-space:nowrap}
+  .cbtn.sm.active{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.55);color:var(--tx)}
+  .cbtn.sm b{font-weight:500;font-size:10px}
+  .cbtn.sm.active b{color:var(--tx2)}
+  .subof{font-size:12.5px;font-weight:400;color:var(--tx2)}
+  .badge.lnk{color:var(--ac2)}
+  main{padding:6px 20px calc(var(--tray-cover, 190px) + 6px)}
+  .cathead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+  .cathead h2{margin:0;font-size:19px;letter-spacing:.3px}
+  .badge{font-size:11px;padding:2px 9px;border-radius:var(--pill);background:var(--soft);color:var(--tx2)}
+  .catintro{color:var(--tx2);font-size:12.5px;margin:6px 0 12px;white-space:pre-wrap}
+  .subslot{font-size:11px;color:var(--tx3);margin:16px 0 6px;letter-spacing:.08em;text-transform:uppercase}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px}
+  .more{margin:14px 0 0;display:flex;gap:10px;align-items:center;color:var(--tx3);font-size:12px}
+  .card{position:relative;text-align:left;overflow:hidden;
+    background:linear-gradient(180deg,var(--soft),var(--soft-2));
+    border:1px solid var(--line);border-radius:var(--r5);padding:11px 13px;
+    transition:transform var(--dur-2) var(--ease-out),box-shadow var(--dur-2) var(--ease-out),
+      border-color var(--dur-1) var(--ease),background-color var(--dur-2) var(--ease);
+    display:flex;flex-direction:column;gap:4px;min-height:96px}
+  .card:hover{border-color:var(--ac);transform:translateY(-3px);box-shadow:var(--sh-1)}
+  .card:active{transform:translateY(-1px) scale(.995)}
+  .card.sel{border-color:var(--ac2);box-shadow:0 0 0 2px rgba(34,211,238,.25)}
+  .ctag{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12.5px;color:var(--tx-strong);line-height:1.35;
+    word-break:break-word;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  .czh{color:var(--tx2);font-size:12px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cmeta{display:flex;gap:8px;align-items:center;margin-top:9px;font-size:11px;color:var(--tx3);flex-wrap:wrap}
+  .pill{padding:1px 8px;border-radius:var(--pill);background:var(--soft)}
+  .pill.f{background:var(--f-bg);color:var(--f-tx)}
+  .pill.u{background:var(--u-bg);color:var(--u-tx)}
+  .pill.s{background:var(--s-bg);color:var(--s-tx)}
+  /* 卡片右侧操作按钮：☆ 收藏 / × 移除 */
+  .cbtns{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity var(--dur-2) var(--ease);z-index:5}
+  .card:hover .cbtns,.card.sel .cbtns,.card.fav .cbtns{opacity:1}
+  .cbtn2{width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:var(--r1);font-size:13px;line-height:1;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--tx2);
+    transition:background var(--tr),color var(--tr),border-color var(--tr),transform var(--dur-1) var(--ease)}
+  .cbtn2:hover{color:var(--tx-strong);background:var(--btn-bg-h);transform:none}
+  .cbtn2.on{color:#0b0d14;background:var(--fav);border-color:var(--fav)}
+  .cbtn2.sel{color:#0b0d14;background:var(--ac2);border-color:var(--ac2)}
+  .card.fav{border-color:var(--star-brd)}
+  .thumb{display:none}
+  .card.hasimg .thumb{display:block;position:absolute;top:0;right:0;width:112px;height:72px;
+    border-bottom-left-radius:var(--r5);overflow:hidden;opacity:.34;pointer-events:none;transition:opacity var(--dur-2) var(--ease);z-index:0;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 30%,#000 58%);mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.28) 30%,#000 58%)}
+  .card.hasimg:hover .thumb{opacity:.14}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .card.hasimg .ctag,.card.hasimg .czh,.card.hasimg .cmeta{position:relative;z-index:2}
+  .card.hasimg .ctag{text-shadow:var(--card-sh)}
+  .card.hasimg .czh,.card.hasimg .cmeta{text-shadow:var(--card-sh)}
+  .card.hasimg{background:var(--card-img-bg)}
+  .empty{color:var(--tx2);padding:56px 8px;text-align:center;font-size:13.5px}
+  .empty code{background:var(--soft);padding:1px 6px;border-radius:var(--r1)}
+  /* 悬浮检视窗（毛玻璃 + 淡入上浮） */
+  #insp{position:fixed;z-index:90;width:340px;pointer-events:none;opacity:0;transform:translateY(10px) scale(.98);
+    transition:opacity var(--dur-2) var(--ease-out),transform var(--dur-2) var(--ease-out);
+    background:var(--panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-brd);border-radius:var(--r5);box-shadow:var(--sh),var(--glass-in);overflow:hidden}
+  #insp.show{opacity:1;transform:translateY(0) scale(1)}
+  #insp .top{display:flex;gap:12px;padding:12px}
+  #insp .pic{width:92px;height:92px;border-radius:var(--r2);object-fit:cover;background:var(--pic-bg);flex:0 0 auto}
+  #insp .tv{font-family:ui-monospace,Consolas,monospace;font-size:14px;color:var(--tx-strong);word-break:break-all;line-height:1.35}
+  #insp .zh{color:var(--tx2);font-size:12.5px;margin-top:4px}
+  #insp .row{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;border-top:1px solid var(--line);font-size:12px}
+  #insp .row span:first-child{color:var(--tx3)}
+  #insp .row span:last-child{text-align:right;word-break:break-all}
+  #insp .note{padding:9px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--tx2)}
+  #insp .src{padding:9px 12px;border-top:1px solid var(--line);font-size:11.5px;pointer-events:auto}
+  #insp .acts{padding:9px 12px;border-top:1px solid var(--line);display:flex;gap:8px;pointer-events:auto}
+  #insp .acts button{padding:5px 10px;font-size:12px}
+  /* 底部已选托盘（毛玻璃 + 顶部圆角）——可拖高、可收窄条、可完全隐藏 */
+  #tray{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,var(--glass-bg),var(--glass-bg-2));
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-brd);border-bottom:none;border-radius:var(--r5) var(--r5) 0 0;
+    padding:10px 20px 12px;box-shadow:var(--tray-sh),var(--glass-in);
+    transition:background var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease),
+      transform var(--dur-2) var(--ease),height var(--dur-2) var(--ease)}
+  #tray.min .traybody{max-height:0;opacity:0;margin-top:0;overflow:hidden;pointer-events:none}
+  #tray.min{height:auto !important}                                  /* 窄条态忽略拖出来的高度，只留一行 */
+  #tray.off{transform:translateY(112%);pointer-events:none}          /* 完全隐藏：整条滑出屏幕 */
+  #tray.dragging{transition:none}                                    /* 拖拽中关过渡，跟手不迟滞 */
+  /* 顶缘拖拽把手：静止显示一个居中短杠，悬停/拖拽变强调色 */
+  .traygrip{position:absolute;left:0;right:0;top:-6px;height:13px;cursor:row-resize;z-index:2;
+    touch-action:none;border-radius:var(--pill)}
+  .traygrip::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;transform:translateY(-50%);
+    background:transparent;transition:background var(--tr)}
+  .traygrip::before{content:'';position:absolute;left:50%;top:50%;width:46px;height:4px;border-radius:var(--pill);
+    transform:translate(-50%,-50%);background:var(--line2);transition:background var(--tr),width var(--tr)}
+  .traygrip:hover::after,.traygrip:focus-visible::after,.tray.dragging .traygrip::after{background:var(--ac)}
+  .traygrip:hover::before,.traygrip:focus-visible::before,.tray.dragging .traygrip::before{background:var(--ac);width:72px}
+  .traygrip:focus-visible{outline:none}
+  #tray.min .traygrip,#tray.off .traygrip{display:none}
+  /* 隐藏后右下角的召回胶囊（点它展开托盘） */
+  .traypeek{position:fixed;right:18px;bottom:16px;z-index:70;display:inline-flex;align-items:center;gap:7px;
+    padding:7px 13px;border:1px solid var(--glass-brd);border-radius:var(--pill);cursor:pointer;
+    background:linear-gradient(180deg,var(--glass-bg),var(--glass-bg-2));-webkit-backdrop-filter:var(--glass-blur);
+    backdrop-filter:var(--glass-blur);box-shadow:var(--tray-sh);color:var(--tx);font-size:12.5px;
+    opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity var(--dur-2) var(--ease),transform var(--dur-2) var(--ease)}
+  .traypeek.on{opacity:1;transform:none;pointer-events:auto}
+  .traypeek:hover{border-color:var(--ac);color:var(--tx-strong)}
+  .traypeek .kbd{background:var(--chip-bg);border:1px solid var(--chip-brd);border-radius:var(--pill);
+    padding:0 6px;font-size:11px;color:var(--tx2)}
+  .trayrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:1560px;margin:0 auto;width:100%;flex:none}
+  .traybody{max-width:1560px;margin:8px auto 0;width:100%;flex:1 1 auto;min-height:0;max-height:62vh;
+    display:flex;flex-direction:column;overflow:visible;
+    transition:max-height var(--dur-2) var(--ease),opacity var(--dur-1) var(--ease),margin var(--dur-2) var(--ease)}
+  .traytag{display:inline-flex;align-items:center;gap:7px;background:var(--chip-bg);border:1px solid var(--chip-brd);
+    border-radius:var(--pill);padding:3px 6px 3px 10px;font-size:12px;font-family:ui-monospace,Consolas,monospace;margin:0 6px 6px 0;
+    transition:background var(--tr),border-color var(--tr)}
+  .traytag em{font-style:normal;color:var(--chip-accent)}
+  .traytag i{cursor:pointer;font-style:normal;color:var(--tx2);padding:0 4px;border-radius:var(--r1)}
+  .traytag i:hover{color:var(--tx-strong);background:var(--hover)}
+  .trayout{width:100%;flex:1 1 auto;min-height:62px;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r2);padding:9px 10px;
+    font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--tx);resize:vertical;
+    transition:background var(--dur-2) var(--ease),border-color var(--tr)}
+  /* 抽屉（滑入 + 毛玻璃，左侧圆角） */
+  .drawer{position:fixed;right:0;top:0;height:100%;width:430px;max-width:94vw;z-index:85;
+    background:var(--panel);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    border-left:1px solid var(--glass-brd);border-radius:var(--r5) 0 0 var(--r5);
+    box-shadow:var(--sh),var(--glass-in);transform:translateX(102%);
+    transition:transform var(--dur-2) var(--ease-out);display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer header{position:static;padding:14px 16px;border-bottom:1px solid var(--line);border-radius:var(--r5) 0 0 0;
+    background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .drawer .body{padding:14px 16px;overflow:auto;flex:1}
+  .drawer textarea{width:100%;min-height:130px;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r2);padding:10px;
+    font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--tx);resize:vertical;
+    transition:background var(--dur-2) var(--ease),border-color var(--tr)}
+  /* ================= 收藏夹（★ 收藏夹面板：左「标签串」右「单标签」两栏） ================= */
+  .drawer.wide{width:min(780px,96vw)}
+  .favbody{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+  .favcol{min-width:0}
+  .favcol > h4{margin:0 0 8px}
+  .favlist{display:flex;flex-direction:column;gap:10px}
+  .favcard{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r3);padding:10px 12px;
+    transition:border-color var(--tr),box-shadow var(--tr)}
+  .favcard:hover{border-color:var(--line2)}
+  .favcard.pinned{border-color:var(--star-brd)}
+  .favcard.fresh{box-shadow:0 0 0 2px color-mix(in srgb,var(--ac) 45%,transparent)}
+  .favhd{display:flex;align-items:center;gap:6px}
+  .favname{flex:1 1 auto;min-width:0;background:transparent;border:1px solid transparent;border-radius:var(--r1);
+    padding:4px 6px;color:var(--tx-strong);font-size:13.5px;font-weight:600}
+  .favname:hover{border-color:var(--line)}
+  .favname:focus{background:var(--panel);border-color:var(--ac);outline:none}
+  .favstr{margin:7px 0 5px;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--tx2);
+    word-break:break-word;max-height:54px;overflow:auto}
+  .favnote{width:100%;background:transparent;border:1px solid transparent;border-radius:var(--r1);padding:4px 6px;
+    font-size:12px;color:var(--tx2)}
+  .favnote:hover{border-color:var(--line)}
+  .favnote:focus{background:var(--panel);border-color:var(--ac);color:var(--tx);outline:none}
+  .favmeta{font-size:11px;color:var(--tx3);margin-top:4px}
+  .favacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .favacts button{padding:5px 10px;font-size:12px}
+  .favacts .del{color:var(--warn)}
+  .favempty{color:var(--tx3);font-size:12px;padding:12px;border:1px dashed var(--line);border-radius:var(--r3);text-align:center}
+  .favtags{display:flex;flex-wrap:wrap;gap:6px}
+  .favtag{display:inline-flex;align-items:center;gap:7px;background:var(--chip-bg);border:1px solid var(--chip-brd);
+    border-radius:var(--pill);padding:4px 6px 4px 10px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+  .favtag i,.favtag b{cursor:pointer;font-style:normal;padding:0 3px;border-radius:var(--r1)}
+  .favtag i{color:var(--tx3)}
+  .favtag b{font-weight:400;color:var(--ac)}
+  .favtag i:hover,.favtag b:hover{color:var(--tx-strong);background:var(--hover)}
+  .mini{padding:4px 9px !important;font-size:12px !important}
+  .favbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  ol.howto li{margin:6px 0;color:var(--tx2);font-size:12.5px}
+  .kbd{font-family:ui-monospace,Consolas,monospace;background:var(--soft);border-radius:6px;padding:1px 6px;font-size:11px}
+  .tip{color:var(--tx3);font-size:11.5px}
+#toast{position:fixed;z-index:120;pointer-events:none;background:var(--panel);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-brd);color:var(--tx);border-radius:var(--r2);padding:6px 12px;font-size:12px;
+  box-shadow:var(--sh-1),var(--glass-in);opacity:0;transform:translateY(-6px);
+  transition:opacity var(--dur-2) var(--ease-out),transform var(--dur-2) var(--ease-out)}
+#toast.show{opacity:1;transform:translateY(0)}
+  /* ================= 主题切换按钮（日/夜图标旋转交叉） ================= */
+  .themebtn{position:relative;width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:var(--r2);
+    background:var(--soft);border:1px solid var(--line);overflow:hidden;flex:0 0 auto}
+  .themebtn:hover{background:var(--hover);box-shadow:var(--sh-1)}
+  .themebtn svg{position:absolute;width:19px;height:19px;
+    transition:transform var(--dur-3) var(--ease-spring),opacity var(--dur-2) var(--ease)}
+  .themebtn .ic-sun{color:var(--warn)} .themebtn .ic-moon{color:var(--ac2)}
+  html[data-theme="dark"] .themebtn .ic-sun{opacity:1;transform:rotate(0) scale(1)}
+  html[data-theme="dark"] .themebtn .ic-moon{opacity:0;transform:rotate(-90deg) scale(.35)}
+  html[data-theme="light"] .themebtn .ic-sun{opacity:0;transform:rotate(90deg) scale(.35)}
+  html[data-theme="light"] .themebtn .ic-moon{opacity:1;transform:rotate(0) scale(1)}
+  /* 主题切换：整页颜色过渡（View Transitions 不支持时的降级） */
+  html.theme-switching,html.theme-switching *,html.theme-switching *::before,html.theme-switching *::after{
+    transition:background-color var(--dur-3) var(--ease),background-image var(--dur-3) var(--ease),
+      color var(--dur-3) var(--ease),border-color var(--dur-3) var(--ease),box-shadow var(--dur-3) var(--ease),
+      fill var(--dur-3) var(--ease) !important;transition-delay:0s !important}
+  /* 圆形扩散揭幕（从按钮位置扩散出新主题） */
+  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+  ::view-transition-old(root){z-index:1}
+  ::view-transition-new(root){z-index:2}
+  /* 滚动条 / 焦点环 / 选区也跟随主题圆角化 */
+  *{scrollbar-color:var(--line2) transparent;scrollbar-width:thin}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:var(--pill);border:2px solid transparent;background-clip:content-box}
+  :focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:var(--r1)}
+  ::selection{background:color-mix(in srgb,var(--ac) 32%,transparent)}
+  /* 日间模式下令牌覆盖不到的少量手工微调 */
+  html[data-theme="light"] .card.hasimg .thumb{opacity:.26}
+  html[data-theme="light"] .card.hasimg:hover .thumb{opacity:.14}
+  html[data-theme="light"] .dot{box-shadow:0 0 14px rgba(109,77,255,.45)}
+  html[data-theme="light"] button.on{background:rgba(5,150,105,.14);border-color:rgba(5,150,105,.4)}
+  html[data-theme="light"] .cbtn.sm.active{background:rgba(8,145,178,.16);border-color:rgba(8,145,178,.5)}
+  /* ================= 响应式：桌面 → 平板 → 手机（360–430px 优先） ================= */
+  @media (max-width:1180px){
+    .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+    .drawer{width:min(430px,86vw)}
+    .shell{--rail-w:196px}      /* 窄一点的桌面用 196 打底；用户拖过之后以他存的宽度为准 */
+  }
+  @media (max-width:980px){
+    #stats{display:none}
+    .hrow.hstats{display:none}
+    header{padding:10px 14px 8px}
+    .toolbar{padding:12px 14px 4px}
+    .subcat-nav{padding:2px 14px 8px}
+    main{padding:4px 14px 210px}
+    .card.hasimg .thumb{width:92px;height:62px}
+  }
+  @media (max-width:900px){
+    /* 竖栏降级为可收起的抽屉（桌面竖栏 → 窄屏抽屉）；抽屉里不用拖拽/窄条，一律走开关 */
+    .rail{position:fixed;left:0;top:0;bottom:0;z-index:75;width:min(300px,86vw);max-height:none;padding-top:16px;
+      background:linear-gradient(180deg,var(--glass-bg),var(--glass-bg-2));
+      -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+      border-right:1px solid var(--glass-brd);border-radius:0 var(--r5) var(--r5) 0;
+      box-shadow:0 10px 40px rgba(0,0,0,.45);transform:translateX(-102%);
+      transition:transform var(--dur-2) var(--ease)}
+    .rail.open{transform:none}
+    .shell.railoff .rail{display:block}
+    .railgrip{display:none}
+    .shell.railmini .rail{width:min(300px,86vw);padding:16px 9px 18px}
+    .shell.railmini .railhead .clabel{display:block}
+    .shell.railmini .cname{opacity:1;width:auto;pointer-events:auto}
+    .shell.railmini .cbtn{justify-content:flex-start;padding:7px 9px;gap:9px}
+    .shell.railmini .cbtn .n{display:inline-flex}
+  }
+  @media (max-width:820px){
+    #insp{display:none}
+    main{padding-bottom:240px}
+  }
+  @media (max-width:760px){
+    .hrow{gap:8px}
+    .grow{display:none}
+    /* 手机上三段各自成行：①品牌 + 分类开关 ②搜索框 + 模式 ③视图按钮（单行可横滑） */
+    .hzone{flex:1 1 100%;flex-wrap:wrap;gap:8px}
+    .hleft{flex:1 1 100%}
+    .hmid{flex:1 1 100%;justify-content:flex-start}
+    .hright{flex:1 1 100%;margin-left:0;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;
+      scrollbar-width:none;padding-bottom:2px}
+    .hright::-webkit-scrollbar{display:none}
+    .brand{font-size:15.5px;flex:1 1 auto;white-space:nowrap;min-width:0}
+    .hmid #q{width:auto;flex:1 1 100%;min-width:0}
+    #smod{flex:0 1 46%}
+    #grp{flex:1 1 40%}
+    select{min-width:0}
+    .railbtn{margin-left:auto}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+    .card{min-height:86px;padding:10px 11px}
+    .ctag{font-size:12px}
+    .czh{font-size:11.5px}
+    .cathead h2{font-size:17px}
+    .toolbar h2{font-size:17px}
+    #tray{padding:8px 12px 10px}
+    .trayrow{gap:7px}
+    .trayrow button{padding:7px 10px;font-size:12.5px}
+    .drawer{width:100vw;max-width:100vw;border-radius:0}
+    .drawer header{border-radius:0}
+    .drawer.wide{width:100vw}
+    .favbody{grid-template-columns:1fr}
+    .themebtn{width:36px;height:36px}
+  }
+  @media (max-width:520px){
+    header{padding:9px 11px 6px}
+    .toolbar{padding:10px 11px 2px}
+    .subcat-nav{padding:2px 11px 6px}
+    main{padding:2px 11px 260px}
+    .grid{grid-template-columns:1fr;gap:9px}
+    .card{min-height:0}
+    .card.hasimg .thumb{width:76px;height:52px}
+    #tray{border-radius:var(--r4) var(--r4) 0 0}
+    .trayrow b{font-size:13px}
+    .trayout{min-height:52px;font-size:12px}
+    .subcat-nav .clabel{display:none}
+  }
+  /* 尊重系统「减少动态效果」 */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow htop">
+    <div class="hzone hleft">
+      <div class="brand"><span class="dot"></span>Anima 标签工作台</div>
+      <button class="railbtn" id="btnRail" title="分类栏：展开 / 收起为窄条（Shift+点击＝完全隐藏，Ctrl+Shift+B）" aria-label="切换分类栏" aria-expanded="true">☰</button>
+    </div>
+    <div class="hzone hmid">
+      <input type="search" id="q" placeholder="搜索标签 / 中文释义 / 别名（按 / 聚焦）">
+      <select id="smod" title="搜索模式">
+        <option value="exact">精准搜索</option>
+        <option value="fuzzy">模糊搜索</option>
+      </select>
+      <select id="grp"><option value="">全部分组</option></select>
+    </div>
+    <div class="hzone hright">
+      <button class="themebtn" id="btnTheme" title="切换日间 / 夜间模式（Ctrl+Shift+L）" aria-label="切换主题">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 14.6A8.6 8.6 0 0 1 9.4 3.6a8.6 8.6 0 1 0 11 11Z"/></svg>
+      </button>
+      <button class="ghost" id="btnImg" title="切换卡片缩略图">缩略图：开</button>
+      <button class="ghost" id="btnHow">使用说明</button>
+      <button class="ghost" id="btnFavs" title="收藏夹：收藏过的标签串与单标签（Ctrl+Shift+F）" aria-label="收藏夹">★ <span class="kbd" id="favn">0</span></button>
+      <button id="btnBuild">装配台 <span class="kbd" id="cnt">0</span></button>
+    </div>
+  </div>
+  <div class="hrow hstats"><div class="sub" id="stats">加载中…</div></div>
+</header>
+
+<div class="shell" id="shell">
+  <aside class="rail" id="rail" aria-label="一级分类">
+    <div class="railhead"><span class="clabel">分类</span><button class="railmini-btn" id="btnRailMini" title="收起为窄条 / 展开（☰ 或 Ctrl+Shift+B）" aria-label="收起为窄条">«</button></div>
+    <nav class="catlist" id="catbar"></nav>
+  </aside>
+  <div class="railgrip" id="railGrip" role="separator" aria-orientation="vertical" tabindex="0"
+       aria-label="拖动调整分类栏宽度（←/→ 微调，双击复位）" title="拖动调整宽度（双击复位，←/→ 微调）"></div>
+  <div class="ws">
+    <div class="toolbar">
+      <h2 id="catTitle"><span class="cico" id="catTitleIcon" hidden></span><span id="catTitleText">全部分类</span></h2>
+      <span class="cnt" id="catCnt">—</span>
+      <span class="sp"></span>
+      <div class="sub2" id="smode"></div>
+      <button class="ghost" id="btnClearQ" hidden>✕ 清除搜索</button>
+    </div>
+    <div class="subcat-nav" id="subbar" hidden></div>
+    <main id="main"></main>
+  </div>
+</div>
+<div class="railscrim" id="railScrim"></div>
+<div id="insp"></div>
+
+<div id="tray">
+  <div class="traygrip" id="trayGrip" role="separator" aria-orientation="horizontal" tabindex="0"
+       aria-label="拖动调整装配台高度（↑/↓ 微调，双击复位）" title="拖动调整高度（双击复位，↑/↓ 微调）"></div>
+  <div class="trayrow">
+    <b>已选 <span id="seln">0</span></b>
+    <span class="grow"></span>
+    <button class="ghost" id="btnSaveFav" title="把当前已选的那串标签整体收藏（可命名、写备注、一键复用）">☆ 收藏这串</button>
+    <button class="ghost" id="btnCopySel">复制已选标签</button>
+    <button class="ghost" id="btnExport">导出 txt</button>
+    <button class="ghost" id="btnClear">一键清空</button>
+    <button class="ghost" id="btnMin" title="装配台：完整 ⇄ 窄条（Shift+点击＝完全隐藏，Ctrl+Shift+T）">收起</button>
+    <button id="btnBuild2">打开装配台</button>
+  </div>
+  <div class="traybody">
+    <div id="selbox" class="tip">还没有选任何标签。点卡片上的 <b>+</b> 或点标签名即可加入；点 <b>☆</b> 收藏常用标签。</div>
+    <textarea class="trayout" id="trayout" readonly placeholder="选好标签后这里会实时生成可复制的标签串…"></textarea>
+    <div class="trayrow"><span class="tip" id="traytip"></span><span class="grow"></span><button class="ghost" id="btnCopyStr">复制这串</button></div>
+  </div>
+</div>
+<button class="traypeek" id="trayPeek" title="展开装配台（已选标签都在里面，不会丢）">▲ 装配台 <span class="kbd" id="peekn">0</span></button>
+
+<div class="drawer" id="drawer">
+  <header>
+    <div class="hrow">
+      <b>提示词装配台</b>
+      <div class="grow"></div>
+      <button class="ghost" id="btnCopyAll">复制整串</button>
+      <button class="ghost" id="btnClose">关闭</button>
+    </div>
+  </header>
+  <div class="body">
+    <p class="sub">按官方推荐顺序自动分层：<b>质量/元信息 → 人数 → 角色 → 作品 → 画师 → 外观动作 → 构图光影场景</b>。已在官方前缀里的标签会自动去重。</p>
+    <div id="chips" class="traybody"></div>
+    <h4 class="subslot">输出（逗号分隔纯标签，可直接粘贴）</h4>
+    <textarea id="out" readonly placeholder="选好标签后自动生成…"></textarea>
+    <h4 class="subslot">官方正向前缀</h4>
+    <textarea id="prefix" readonly>masterpiece, best quality, score_7, safe, </textarea>
+    <h4 class="subslot">官方负向词</h4>
+    <textarea id="neg" readonly>worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration</textarea>
+    <h4 class="subslot">使用说明</h4>
+    <ol class="howto" id="howto2"></ol>
+  </div>
+</div>
+
+<div class="drawer wide" id="favs">
+  <header>
+    <div class="hrow">
+      <b>★ 收藏夹</b>
+      <span class="tip" id="favstat"></span>
+      <div class="grow"></div>
+      <button class="ghost" id="btnFavExport" title="导出成 JSON 文件（备份 / 换机器）">导出 JSON</button>
+      <button class="ghost" id="btnFavImport" title="从 JSON 文件导入（按内容自动去重合并）">导入 JSON</button>
+      <input type="file" id="favfile" accept=".json,application/json" hidden>
+      <button class="ghost" id="btnFavClose">关闭</button>
+    </div>
+  </header>
+  <div class="body favbody">
+    <div class="favcol">
+      <h4 class="subslot">标签串 <span class="kbd" id="favstrn">0</span></h4>
+      <div id="favlist" class="favlist"></div>
+    </div>
+    <div class="favcol">
+      <h4 class="subslot">单标签 <span class="kbd" id="favtagn">0</span></h4>
+      <div class="favbar">
+        <button class="ghost mini" id="btnFavTagsCopy">复制全部</button>
+        <button class="ghost mini" id="btnFavTagsAdd">全部加入已选</button>
+        <button class="ghost mini" id="btnFavTagsClear">清空</button>
+      </div>
+      <div id="favtags" class="favtags"></div>
+      <p class="tip" style="margin-top:10px">单标签收藏就是卡片右上角的 ☆（点分类条最左的「★ 收藏」也能只看它们）。标签串收藏是整串保存：可以命名、写备注、置顶、上下移动，一键复用回装配台或当搜索词。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== viewer/collections-core.js（构建时自动内联，别改这里） ===== */
+/* collections-core.js —— 「tag 串收藏」的纯逻辑层
+ *
+ * 为什么单独一个文件：收藏逻辑（归一化 / 内容去重 / 改名 / 备注 / 置顶排序 /
+ * 导入导出 / 双端合并）要能脱离浏览器单独被测。这一层不碰 DOM、不碰 fetch、
+ * 不碰 localStorage，浏览器与 Node 共用同一份代码：
+ *
+ *   - 浏览器：<script src="collections-core.js"><\/script> → window.KBCollections
+ *   - Node  ：const C = require('./viewer/collections-core.js')   （零依赖）
+ *
+ * 构建时（scripts/finish-build.mjs）会把本文件内联进 anima-tag-exhibition.html，
+ * 所以展览版仍然是单文件、可直接双击打开。
+ *
+ * 数据模型（v1）：
+ *   {
+ *     v: 1,
+ *     items: [{
+ *       id, name, tags: [...], cats: {tag: catId}, note, pinned, order,
+ *       createdAt, updatedAt, ctx: { cat, sub, q, mode }
+ *     }],
+ *     tombstones: { <id>: <删除时间 ISO> }     // 让「删除」也能跨浏览器同步（不会被远端复活）
+ *   }
+ * 说明：`key` 是 tags 归一后（小写、下划线=空格、忽略顺序）拼出的指纹，用于内容去重；
+ * 它是派生字段，每次校验都会重算，不参与持久化语义。
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;   // Node (CJS)
+  else root.KBCollections = api;                                            // 浏览器
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const VERSION = 1;
+  const KEY_SEP = '\u0001';
+  const DAY = 86400000;
+  const LIMITS = { name: 80, note: 300, tags: 200, items: 500, tombstones: 400, tombDays: 30 };
+
+  /* ---------- 小工具 ---------- */
+  const iso = now => new Date(now == null ? Date.now() : now).toISOString();
+  const ms = v => { const t = Date.parse(v); return Number.isFinite(t) ? t : 0; };
+  const isPlainObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  function newId(now) {
+    return 'c' + (now == null ? Date.now() : now).toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function str(v, max) {
+    const s = String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return max ? s.slice(0, max) : s;
+  }
+
+  /* ---------- 归一化与指纹 ---------- */
+  /** 标签归一：小写、下划线与空格等价、去掉多余空白（官方写法是空格，库里两种混用） */
+  function normTag(t) {
+    return String(t == null ? '' : t).replace(/[\s\u3000]+/g, ' ').trim().replace(/[_\s]+/g, ' ').toLowerCase();
+  }
+  /** 归一 + 去重（保留原顺序），输入可以是数组或 "a, b, c" 字符串 */
+  function normTags(tags) {
+    const arr = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.split(/[,，;；\n]+/) : []);
+    const seen = new Set(), out = [];
+    for (const t of arr) {
+      const n = normTag(t);
+      if (!n || seen.has(n)) continue;
+      seen.add(n);
+      out.push(n);
+    }
+    return out;
+  }
+  /** 内容指纹：忽略顺序的归一标签串 */
+  function keyOf(tags) { return normTags(tags).slice().sort().join(KEY_SEP); }
+  /** 两组标签是否「内容相同」（忽略顺序、大小写、下划线/空格） */
+  function equalsTags(a, b) { return keyOf(a) === keyOf(b); }
+
+  /* ---------- 命名 ---------- */
+  function defaultName(tags, maxLen) {
+    const t = normTags(tags);
+    if (!t.length) return '空标签串';
+    const base = t.length === 1 ? t[0] : `${t[0]} 等 ${t.length} 个`;
+    return str(base, maxLen || 48);
+  }
+  /** 自动名去重：同名就加 (2) (3)…（用户手填的名字不做限制，允许重复） */
+  function uniqueName(items, name, excludeId) {
+    const base = str(name, LIMITS.name) || '未命名';
+    const taken = new Set((items || []).filter(it => it.id !== excludeId).map(it => String(it.name).toLowerCase()));
+    if (!taken.has(base.toLowerCase())) return base;
+    for (let n = 2; n < 999; n++) {
+      const cand = `${base} (${n})`;
+      if (!taken.has(cand.toLowerCase())) return cand;
+    }
+    return `${base} (${Date.now()})`;
+  }
+
+  /* ---------- 校验 / 规范化 ---------- */
+  function cleanCtx(ctx) {
+    const c = isPlainObj(ctx) ? ctx : {};
+    return { cat: str(c.cat, 64), sub: str(c.sub, 64), q: str(c.q, 200), mode: str(c.mode, 16) };
+  }
+  function cleanCats(cats, tags) {
+    const src = isPlainObj(cats) ? cats : {};
+    const out = {};
+    for (const t of tags) {
+      const v = str(src[t], 64);
+      if (v) out[t] = v;
+    }
+    return out;
+  }
+  /** 单个条目的规范化：坏数据就地修好，返回 null 表示这条没法救（没有标签） */
+  function normItem(raw, now) {
+    if (!isPlainObj(raw)) return null;
+    const tags = normTags(raw.tags);
+    if (!tags.length) return null;
+    const t = now == null ? Date.now() : now;
+    return {
+      id: str(raw.id, 64) || newId(t + Math.floor(Math.random() * 1000)),
+      name: str(raw.name, LIMITS.name) || defaultName(tags),
+      tags,
+      cats: cleanCats(raw.cats, tags),
+      note: str(raw.note, LIMITS.note),
+      pinned: !!raw.pinned,
+      order: Number.isFinite(raw.order) ? raw.order : (ms(raw.createdAt) || t),
+      createdAt: ms(raw.createdAt) ? new Date(ms(raw.createdAt)).toISOString() : iso(t),
+      updatedAt: ms(raw.updatedAt) ? new Date(ms(raw.updatedAt)).toISOString() : iso(t),
+      ctx: cleanCtx(raw.ctx),
+      key: keyOf(tags)
+    };
+  }
+  /** 把任意输入（null / 数组 / {items} / {v,items}）整理成合法 state */
+  function validate(raw, opts) {
+    const now = (opts && opts.now) == null ? Date.now() : opts.now;
+    const src = Array.isArray(raw) ? { items: raw } : (isPlainObj(raw) ? raw : {});
+    const arr = Array.isArray(src.items) ? src.items : [];
+    const errors = [];
+    const items = [], byId = new Map(), byKey = new Map();
+    let dropped = 0;
+    for (const r of arr) {
+      const it = normItem(r, now);
+      if (!it) { dropped++; continue; }
+      const sameId = byId.get(it.id);
+      if (sameId) {                       // id 撞了：重发一个 id，不丢数据
+        it.id = newId(now + items.length);
+        errors.push('重复 id 已改写：' + (r && r.id));
+      }
+      const sameKey = byKey.get(it.key);   // 内容重复：留更新的那条（自动去重）
+      if (sameKey) {
+        dropped++;
+        if (ms(it.updatedAt) > ms(sameKey.updatedAt)) Object.assign(sameKey, it);
+        continue;
+      }
+      items.push(it); byId.set(it.id, it); byKey.set(it.key, it);
+      if (items.length >= LIMITS.items) { dropped += arr.length - items.length - dropped; break; }
+    }
+    const tombs = {};
+    const srcTombs = isPlainObj(src.tombstones) ? src.tombstones : {};
+    for (const [id, when] of Object.entries(srcTombs)) {
+      const t = ms(when);
+      if (!t || now - t > LIMITS.tombDays * DAY) continue;
+      tombs[str(id, 64)] = new Date(t).toISOString();
+    }
+    // 墓碑比条目新 → 这条确实被删过，丢弃
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      if (tombs[it.id] && ms(tombs[it.id]) >= ms(it.updatedAt)) { items.splice(i, 1); byId.delete(it.id); byKey.delete(it.key); dropped++; }
+    }
+    // 墓碑数量上限（留最新的）
+    const tkeys = Object.keys(tombs);
+    if (tkeys.length > LIMITS.tombstones) {
+      tkeys.sort((a, b) => ms(tombs[b]) - ms(tombs[a]))
+        .slice(LIMITS.tombstones)
+        .forEach(k => delete tombs[k]);
+    }
+    return { ok: errors.length === 0, errors, dropped, state: { v: VERSION, items, tombstones: tombs } };
+  }
+  const empty = () => ({ v: VERSION, items: [], tombstones: {} });
+
+  /* ---------- 查询 ---------- */
+  const itemsOf = state => validate(state).state.items;
+  const getById = (state, id) => itemsOf(state).find(it => it.id === id) || null;
+  const findByKey = (state, tags) => { const k = keyOf(tags); return itemsOf(state).find(it => it.key === k) || null; };
+  /** 显示顺序：置顶优先 → order 升序 → 创建时间、id 兜底（保证稳定） */
+  function sortList(items) {
+    return items.slice().sort((a, b) =>
+      (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) ||
+      a.order - b.order ||
+      ms(a.createdAt) - ms(b.createdAt) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  }
+  const sortedItems = state => sortList(itemsOf(state));
+  const nextOrder = state => { const l = itemsOf(state); return l.length ? Math.max(...l.map(i => i.order)) + 1 : 0; };
+  const tagList = item => normTags(item && item.tags);
+  /** 「用这串搜索」填进搜索框的内容 */
+  const searchQueryOf = item => tagList(item).join(', ');
+  function stats(state) {
+    const st = validate(state).state;
+    return {
+      count: st.items.length,
+      pinned: st.items.filter(i => i.pinned).length,
+      tags: st.items.reduce((s, i) => s + i.tags.length, 0),
+      tombstones: Object.keys(st.tombstones).length,
+      updatedAt: st.items.reduce((m, i) => Math.max(m, ms(i.updatedAt)), 0) || null
+    };
+  }
+  function describe(item) {
+    const ctx = cleanCtx(item && item.ctx);
+    const where = [];
+    if (ctx.cat) where.push(ctx.cat);
+    if (ctx.sub) where.push(ctx.sub);
+    if (ctx.q) where.push(`搜索「${ctx.q}」`);
+    return { tags: tagList(item).length, note: str(item && item.note, LIMITS.note), from: where.join(' / ') };
+  }
+
+  /* ---------- 增删改 ---------- */
+  /** 收藏一串标签；内容重复直接返回已有那条（dup），不新增。
+   *  命名规则（用户定的）：不填名字时自动生成并避开重名（加 (2)）；手填的名字允许重复。 */
+  function add(state, opts) {
+    const o = opts || {};
+    const now = o.now == null ? Date.now() : o.now;
+    const st = validate(state, { now }).state;
+    const tags = normTags(o.tags).slice(0, LIMITS.tags);
+    if (!tags.length) return { state: st, item: null, dup: null, reason: 'empty' };
+    const dup = findByKey(st, tags);
+    if (dup && !o.allowDup) return { state: st, item: null, dup, reason: 'dup' };
+    const item = {
+      id: str(o.id, 64) || newId(now),
+      name: o.name ? str(o.name, LIMITS.name) : uniqueName(st.items, defaultName(tags)),
+      tags,
+      cats: cleanCats(o.cats, tags),
+      note: str(o.note, LIMITS.note),
+      pinned: !!o.pinned,
+      order: Number.isFinite(o.order) ? o.order : nextOrder(st),
+      createdAt: iso(now),
+      updatedAt: iso(now),
+      ctx: cleanCtx(o.ctx),
+      key: keyOf(tags)
+    };
+    st.items.push(item);
+    return { state: st, item, dup: null, reason: 'ok' };
+  }
+  function patch(state, id, fields, now) {
+    const t = now == null ? Date.now() : now;
+    const st = validate(state, { now: t }).state;
+    const it = st.items.find(x => x.id === id);
+    if (!it) return { state: st, item: null, error: 'not-found' };
+    Object.assign(it, fields);
+    if (fields.tags) { it.tags = normTags(fields.tags); it.cats = cleanCats(fields.cats || it.cats, it.tags); it.key = keyOf(it.tags); }
+    it.updatedAt = iso(t);
+    return { state: st, item: it, error: null };
+  }
+  const rename = (state, id, name, now) => patch(state, id, { name: str(name, LIMITS.name) || '未命名' }, now);
+  const setNote = (state, id, note, now) => patch(state, id, { note: str(note, LIMITS.note) }, now);
+  const togglePin = (state, id, now) => {
+    const it = getById(state, id);
+    return it ? patch(state, id, { pinned: !it.pinned }, now) : { state: validate(state).state, item: null, error: 'not-found' };
+  };
+  /** 上移/下移一位（在当前显示顺序里换位，然后把顺序重排成 0..n-1）
+   *  注意：这里必须直接排 st.items —— validate() 每次都会产出新的条目对象，
+   *  拿 sortedItems(st) 的结果去改 order 会改到副本上（顺序纹丝不动）。 */
+  function move(state, id, delta, now) {
+    const t = now == null ? Date.now() : now;
+    const st = validate(state, { now: t }).state;
+    const list = sortList(st.items);
+    const i = list.findIndex(it => it.id === id);
+    if (i < 0) return { state: st, moved: false, index: -1 };
+    const j = Math.max(0, Math.min(list.length - 1, i + Number(delta || 0)));
+    if (j === i) return { state: st, moved: false, index: i };
+    const [it] = list.splice(i, 1);
+    list.splice(j, 0, it);
+    list.forEach((x, k) => { x.order = k; if (x.id === id) x.updatedAt = iso(t); });
+    return { state: st, moved: true, index: j };
+  }
+  /** 删除：条目移除 + 落一个墓碑（保证跨浏览器/跨端口不会被远端重新合并回来） */
+  function remove(state, id, now) {
+    const t = now == null ? Date.now() : now;
+    const st = validate(state, { now: t }).state;
+    const i = st.items.findIndex(x => x.id === id);
+    if (i < 0) return { state: st, removed: null };
+    const [removed] = st.items.splice(i, 1);
+    st.tombstones[removed.id] = iso(t);
+    return { state: st, removed };
+  }
+  const clear = (state, now) => {
+    const t = now == null ? Date.now() : now;
+    const st = validate(state, { now: t }).state;
+    const n = st.items.length;
+    st.items.forEach(it => { st.tombstones[it.id] = iso(t); });
+    st.items = [];
+    return { state: st, removed: n };
+  };
+
+  /* ---------- 导入 / 导出 / 合并 ---------- */
+  function exportJSON(state, opts) {
+    const st = validate(state).state;
+    const payload = { v: VERSION, kind: 'anima-tag-collections', exportedAt: iso(opts && opts.now), items: st.items, tombstones: st.tombstones };
+    return JSON.stringify(payload, null, 2);
+  }
+  /** 导入：吃掉数组 / {items} / 导出文件 / 字符串；去重、修坏字段，返回落地结果 */
+  function importState(raw, opts) {
+    const now = (opts && opts.now) == null ? Date.now() : opts.now;
+    let data = raw;
+    if (typeof raw === 'string') { try { data = JSON.parse(raw); } catch (e) { return { state: empty(), added: 0, skipped: 0, error: 'parse-failed' }; } }
+    if (!Array.isArray(data) && !isPlainObj(data) && data != null) return { state: empty(), added: 0, skipped: 0, error: 'bad-shape' };
+    const incoming = validate(data, { now });
+    const base = (opts && opts.base) ? validate(opts.base, { now }).state : empty();
+    const merged = mergeStates(base, incoming.state, { now }).state;
+    return { state: merged, added: merged.items.length - base.items.length, skipped: incoming.dropped, error: null };
+  }
+  /** 双端合并：按 id 取更新的那条；墓碑压过更旧的条目；内容重复合并成一条 */
+  function mergeStates(a, b, opts) {
+    const now = (opts && opts.now) == null ? Date.now() : opts.now;
+    const A = validate(a, { now }).state, B = validate(b, { now }).state;
+    const tombs = {};
+    for (const src of [A.tombstones, B.tombstones]) {
+      for (const [id, when] of Object.entries(src || {})) {
+        if (!tombs[id] || ms(when) > ms(tombs[id])) tombs[id] = when;
+      }
+    }
+    const byId = new Map();
+    let added = 0, updated = 0;
+    for (const src of [A, B]) {
+      for (const it of src.items) {
+        const cur = byId.get(it.id);
+        if (!cur) { byId.set(it.id, it); if (src === B) added++; continue; }
+        if (ms(it.updatedAt) > ms(cur.updatedAt)) { Object.assign(cur, it); updated++; }
+      }
+    }
+    const out = [], byKey = new Map();
+    for (const it of byId.values()) {
+      if (tombs[it.id] && ms(tombs[it.id]) >= ms(it.updatedAt)) continue;
+      const dup = byKey.get(it.key);
+      if (dup) { if (ms(it.updatedAt) > ms(dup.updatedAt)) Object.assign(dup, it); continue; }
+      out.push(it); byKey.set(it.key, it);
+    }
+    const merged = validate({ v: VERSION, items: out, tombstones: tombs }, { now }).state;
+    return { state: merged, added, updated, total: merged.items.length };
+  }
+
+  return {
+    VERSION, LIMITS,
+    normTag, normTags, keyOf, equalsTags,
+    defaultName, uniqueName,
+    empty, validate, normItem, cleanCtx,
+    itemsOf, getById, findByKey, sortedItems, nextOrder, tagList, searchQueryOf, stats, describe,
+    add, patch, rename, setNote, togglePin, move, remove, clear,
+    exportJSON, importState, mergeStates,
+    _internal: { KEY_SEP, newId, str, ms, iso }
+  };
+});
+
+</script>
+<script>
+const ORDER = ['quality','meta-dataset','era','safety','count','character','series','character-all','series-all','hair-color','hair-style','tg-hair','tg-hair-color','tg-hair-styles','eyes','tg-eyes','face','expression','tg-face','tg-ears','tg-body-parts','tg-skin','tg-makeup','attire','uniform','traditional','attire-detail','clothing-sets','tg-attire','tg-legwear','tg-headwear','tg-handwear','tg-sleeves','tg-neck','tg-eyewear','tg-fashion','accessory','tg-accessories','pose','tg-posture','tg-gestures','tg-hands','tg-holding','tg-verbs','tg-dances','composition','tg-composition','tg-focus','lighting','tg-lighting-full','background','tg-backgrounds','tg-locations','tg-locations-real','background-sets','pose-sets','tg-theme','tg-flowers','color','tg-colors-full','tg-subjective','tg-phrases','tg-aesthetic','style','artist','artist-ranked','tg-food','tg-technology','tg-water','tg-fire','tg-creatures','tg-cats','tg-dogs','tg-birds','tg-sports','tg-jobs','tg-holidays','tg-companies','tg-patterns','tg-prints','tg-symbols','tg-text','tg-metatags','tg-year','tg-audio','negative','tg-censorship'];
+let KB=null, curCat='', showImg=true;
+const PREFIX_TAGS = ['masterpiece','best quality','score_7','safe'];
+const PREFIX_STR = PREFIX_TAGS.join(', ') + ', ';
+
+/* ================= 数据层：两级分类分包按需加载 =================
+   数据目录（画师类/）与本页同级：
+     画师类/manifest.json        大分类清单（id/name/kind/order/count/subs/files）
+     画师类/bigs/<id>.json       每个大分类一个文件（>3500 条会分片 -2 -3 …）
+     画师类/search-index.json    紧凑检索索引（精准/模糊搜索共用）
+   —— 改数据只需重跑 `node scripts/build-hierarchy.mjs`，本页无需改动。 */
+const SPLIT = new URL('画师类/', location.href).href;
+const CATS = [];              // 大分类元数据（items 按需填充）
+const CAT_BY_ID = new Map();
+let META = {};                // manifest.meta（总条目数 / 官方组条目数 / 已取频次 …）
+let FIELD = { tag:0, zh:1, weight:2, freq:3, confidence:4, aliases:5, note:6, slot:7, img:8, placeholder:9, source:10, srcKey:11, sub:12, official:13, nsfw:14, groups:15, srcs:16 };
+let ROWS = [], ROWS_BY_CAT = new Map(), IDX_READY = null, FUSE = null, FUSE_READY = null, fuseBroken = false;
+let CURSUB = '';              // 当前大分类下选中的小分类（'' = 全部）
+
+const KIND_LABEL = { curated: '策展分类', official: 'Danbooru 官方组' };
+function fmtFreq(n){
+  if(n == null || n === '') return '';
+  if(typeof n === 'string') return n;
+  if(n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if(n >= 1e3) return (n/1e3).toFixed(1) + 'k';
+  return String(n);
+}
+
+async function loadScript(src){
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = () => res(true); s.onerror = () => rej(new Error('load fail ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function fetchJSON(url){
+  const r = await fetch(url, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
+  return r.json();
+}
+function unpack(id, payload){
+  const c = CAT_BY_ID.get(id);
+  if(!c) return 0;
+  const F = FIELD;
+  const arr = (payload.items || []).map(r=>{
+    const o = { tag: r[F.tag], zh: r[F.zh], weight: r[F.weight] || '', catId: id };
+    if (r[F.freq]) o.freq = fmtFreq(r[F.freq]);
+    if (r[F.confidence]) o.confidence = r[F.confidence];
+    if (r[F.aliases]) o.aliases = r[F.aliases];
+    if (r[F.note]) o.note = r[F.note];
+    if (r[F.slot]) o.slot = r[F.slot];
+    if (r[F.img]) o.img = r[F.img];
+    if (r[F.placeholder]) o.placeholder = r[F.placeholder];
+    if (r[F.source]) o.source = { label: r[F.source], url: r[F.srcKey] || '#' };
+    if (r[F.sub]) o.sub = r[F.sub];
+    if (r[F.official] === 1) o.official = true;
+    if (r[F.nsfw] === 1) o.nsfw = true;
+    return o;
+  });
+  const part = payload.part || 1;
+  c.parts = c.parts || [];
+  c.parts[part - 1] = arr;
+  const total = (c.files && c.files.length) ? c.files.length : 1;
+  if (c.parts.filter(Boolean).length >= total) {
+    c.items = c.parts.flat();
+    c.loaded = true;
+    const nav = document.querySelector(`.cbtn[data-cat="${c.id}"] b`);
+    if(nav) nav.textContent = c.items.length;
+    refreshLayer();
+  }
+  return arr.length;
+}
+async function ensureLoaded(id){
+  const c = CAT_BY_ID.get(id);
+  if(!c || c.loaded) return c;
+  if(!c._p){
+    c._p = (async () => {
+      const files = (c.files && c.files.length) ? c.files : [c.file];
+      const js = await Promise.all(files.map(f => fetchJSON(SPLIT + f)));
+      js.sort((a, b) => (a.part || 1) - (b.part || 1));
+      c.parts = [];
+      for(const j of js) unpack(id, j);
+      return c;
+    })();
+  }
+  return c._p;
+}
+let LIMIT = 6;   // 并发上限
+function runQueue(ids){
+  const q = ids.slice();
+  const pump = () => { while(q.length && LIMIT > 0){ LIMIT--; const id = q.shift();
+    ensureLoaded(id).catch(()=>{}).finally(()=>{ LIMIT++; if(q.length) pump(); }); } };
+  pump();
+}
+async function loadIndex(){
+  if(IDX_READY) return IDX_READY;
+  IDX_READY = fetchJSON(SPLIT + 'search-index.json')
+    .then(j => {
+      ROWS = j.rows || [];
+      ROWS_BY_CAT = new Map();
+      for(const r of ROWS){ if(!ROWS_BY_CAT.has(r[1])) ROWS_BY_CAT.set(r[1], []); ROWS_BY_CAT.get(r[1]).push(r); }
+      return ROWS;
+    })
+    .catch(()=>{ ROWS = []; return []; });
+  return IDX_READY;
+}
+async function ensureFuse(){
+  if(FUSE_READY) return FUSE_READY;
+  FUSE_READY = (async () => {
+    await loadIndex();
+    if(!ROWS.length) return null;
+    if(typeof Fuse === 'undefined'){
+      try { await loadScript(new URL('vendor/fuse.min.js', location.href).href); }
+      catch(e){ fuseBroken = true; return null; }
+    }
+    try{
+      FUSE = new Fuse(ROWS.map((r, i) => ({ i, t: r[0], z: r[3], a: r[4] })),
+        { includeScore: true, ignoreLocation: true, threshold: 0.26, distance: 200,
+          minMatchCharLength: 3, keys: [{ name: 't', weight: 1 }, { name: 'z', weight: 0.45 }, { name: 'a', weight: 0.7 }] });
+    }catch(e){ fuseBroken = true; return null; }
+    return FUSE;
+  })();
+  return FUSE_READY;
+}
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* 大分类 id 含冒号（cb:base / og:attire），不能拼进 CSS 选择器，必须走 getElementById */
+const catEl = (id, sel) => { const s = document.getElementById('cat-'+id); return s ? s.querySelector(sel) : null; };
+// 大分类配色：策展分类与官方组各挑一个已有 CSS 变量，未列到的按 id 哈希取色
+const PALETTE = {
+  'cb:base':'q','cb:character':'character','cb:series':'series','cb:artist':'artist','cb:body':'face',
+  'cb:items':'accessory','cb:animals':'background','cb:effects':'color','cb:nsfw':'negative','cb:negative':'negative',
+  'cb:scheme':'style','cb:hanfu':'traditional','cb:misc':'meta',
+  'og:hair':'hair','og:hair-color':'hair','og:hair-styles':'hair','og:face':'face','og:eyes':'eyes','og:ears':'eyes',
+  'og:makeup':'expression','og:skin-color':'face','og:body-parts':'face','og:attire':'attire','og:headwear':'accessory',
+  'og:legwear':'uniform','og:handwear':'uniform','og:sleeves':'attire','og:neck-and-neckwear':'accessory',
+  'og:eyewear':'accessory','og:accessories':'accessory','og:fashion-style':'style','og:patterns':'composition',
+  'og:prints':'composition','og:posture':'pose','og:gestures':'pose','og:hands':'pose','og:holding-tags':'pose',
+  'og:verbs-and-gerunds':'pose','og:dances':'pose','og:image-composition':'composition','og:focus-tags':'composition',
+  'og:lighting':'lighting','og:colors':'color','og:backgrounds':'background','og:locations':'background',
+  'og:real-world-locations':'background','og:water':'color','og:fire':'negative','og:flowers':'background',
+  'og:animals-cats':'background','og:animals-dogs':'background','og:birds':'background','og:creatures':'negative',
+  'og:food-tags':'background','og:technology':'composition','og:audio-tags':'color','og:sports':'pose','og:jobs':'meta',
+  'og:holidays':'era','og:companies':'meta','og:text':'meta','og:symbols':'meta','og:phrases':'meta','og:metatags':'meta',
+  'og:year-tags':'era','og:subjective':'q','og:theme':'style','og:censorship':'safety','og:visual-aesthetic':'style'
+};
+function colorOf(id){
+  const p = PALETTE[id];
+  if(p) return `var(--${p})`;
+  let h = 0; for(const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `hsl(${h} 72% 62%)`;
+}
+// 大类来源行（策展类目没有单独 url 时回落到 manifest 的全局来源）
+function srcLine(cat){
+  const list = (cat && cat.url) ? [{ label: cat.name + ' 官方 tag_group', url: cat.url }] : (META.sources || []);
+  return list.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(' ｜ ');
+}
+
+function loadImageFlag(){ showImg = localStorage.getItem('animaKB.showImg') !== '0'; }
+const NO_IMG = new Set(['cb:artist','cb:character','cb:series','cb:misc']);   // 这三类条目太多且配图无意义
+/* 占位图：直接生成 data URI（零文件、零请求），色相由标签名哈希决定 */
+const phCache = new Map();
+function phSvg(tag){
+  if(phCache.has(tag)) return phCache.get(tag);
+  let h = 0; for(let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  const hue = h % 360, txt = esc(tag.replace(/[^a-zA-Z0-9 ]/g, '').slice(0, 12).toUpperCase());
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="112" height="72" viewBox="0 0 112 72">`
+    + `<rect width="112" height="72" fill="hsl(${hue} 55% 16%)"/>`
+    + `<text x="10" y="46" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="hsl(${hue} 70% 62%)" opacity=".85">${txt}</text></svg>`;
+  const uri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  phCache.set(tag, uri);
+  return uri;
+}
+function imgSrc(it, catId){
+  const s = localStorage.getItem('animaKB.imgMode') || 'auto';
+  if (s === 'off' || !showImg || NO_IMG.has(catId)) return '';
+  return it.img || phSvg(it.tag);
+}
+
+/* ================= 已选 / 收藏 状态（localStorage 持久化） ================= */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+/* ================= 日间 / 夜间主题 =================
+   <head> 里的内联脚本已先定好 data-theme（防闪烁）；这里负责切换与持久化。
+   切换优先用 View Transitions 做「从按钮位置圆形扩散」的揭幕，不支持时降级为整页颜色过渡。 */
+const THEME_KEY = 'animaKB.theme';
+const themeNow = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+function paintThemeBtn(){
+  const b = document.getElementById('btnTheme'); if(!b) return;
+  const t = themeNow(), next = t === 'dark' ? '日间' : '夜间';
+  b.title = '切换到' + next + '模式（Ctrl / Cmd + Shift + L）';
+  b.setAttribute('aria-label', '切换到' + next + '模式');
+  const m = document.getElementById('metaTheme');
+  if(m) m.setAttribute('content', t === 'dark' ? '#0b0d14' : '#f5f6fa');
+}
+function commitTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  LS.set(THEME_KEY, t);
+  paintThemeBtn();
+}
+function setTheme(t, ev){
+  const root = document.documentElement;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!document.startViewTransition || reduce){
+    root.classList.add('theme-switching');
+    commitTheme(t);
+    setTimeout(()=>root.classList.remove('theme-switching'), 480);
+    return;
+  }
+  const btn = document.getElementById('btnTheme');
+  const r = btn ? btn.getBoundingClientRect() : { left: innerWidth-40, top: 40, width: 0, height: 0 };
+  const x = ev && ev.clientX ? ev.clientX : r.left + r.width/2;
+  const y = ev && ev.clientY ? ev.clientY : r.top + r.height/2;
+  const rr = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const vt = document.startViewTransition(()=>commitTheme(t));
+  vt.ready.then(()=>{
+    root.animate(
+      { clipPath: ['circle(0px at '+x+'px '+y+'px)', 'circle('+rr+'px at '+x+'px '+y+'px)'] },
+      { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
+    );
+  }).catch(()=>{});
+}
+function toggleTheme(ev){ setTheme(themeNow() === 'dark' ? 'light' : 'dark', ev); }
+/* 用户没手动切过时跟随系统 */
+if(window.matchMedia){
+  const mq = matchMedia('(prefers-color-scheme: light)');
+  if(mq.addEventListener) mq.addEventListener('change', e=>{
+    if(localStorage.getItem(THEME_KEY) === null) commitTheme(e.matches ? 'light' : 'dark');
+  });
+}
+let SEL = LS.get('animaKB.sel', []);        // 已选标签（有序）
+let FAV = LS.get('animaKB.fav', []);        // 收藏标签
+const selHas = t => SEL.some(x => x.tag === t);
+const favHas = t => FAV.includes(t);
+const saveSel = () => { LS.set('animaKB.sel', SEL); syncCounts(); };
+const saveFav = () => LS.set('animaKB.fav', FAV);
+function syncCounts(){
+  const n1 = $('#seln'), n2 = $('#cnt'), n3 = $('#peekn');
+  if(n1) n1.textContent = SEL.length;
+  if(n2) n2.textContent = SEL.filter(x => !PREFIX_TAGS.includes(x.tag)).length;
+  if(n3) n3.textContent = SEL.length;                      // 托盘隐藏时右下角召回胶囊上的计数
+}
+// 用当前 SEL/FAV 状态刷新「已经渲染出来的卡片」：传 node 就只刷这个子树，不传就刷整页
+function makeCardState(card, it, cat){
+  const on = selHas(it.tag), fv = favHas(it.tag);
+  card.classList.toggle('sel', on); card.classList.toggle('fav', fv);
+  const sb = card.querySelector('[data-sel]');
+  if(sb){ sb.textContent = on ? '×' : '+'; sb.classList.toggle('sel', on); sb.title = on ? '从已选移除' : '加入已选'; }
+  const fb = card.querySelector('[data-fav]');
+  if(fb){ fb.textContent = fv ? '★' : '☆'; fb.classList.toggle('on', fv); fb.title = fv ? '取消收藏' : '收藏这个标签'; }
+}
+function refreshCard(node){
+  const cards = node ? [...node.querySelectorAll('.card')] : [...document.querySelectorAll('.card')];
+  for(const card of cards){
+    const rec = ITEMS.get(card.dataset.key);
+    if(rec) makeCardState(card, rec.it, rec.cat);
+  }
+  syncCounts();
+}
+function toggleTag(tag, catId){
+  const i = SEL.findIndex(x => x.tag === tag);
+  if(i >= 0) SEL.splice(i, 1); else SEL.push({ tag, cat: catId });
+  saveSel(); refreshCard(); buildChips();
+  if(i < 0 && trayState() === 'off') traySet('min');   // 托盘隐藏时加了标签：先露出窄条，让用户看到已选反馈
+}
+function delSel(tag){ const i = SEL.findIndex(x => x.tag === tag); if(i>=0) SEL.splice(i,1); saveSel(); refreshCard(); buildChips(); }
+function clearSel(){ SEL = []; saveSel(); refreshCard(); buildChips(); }
+function toggleFav(tag){
+  const i = FAV.indexOf(tag);
+  if(i >= 0) FAV.splice(i, 1); else FAV.push(tag);
+  saveFav(); refreshCard(); paintCatBar(); favsSyncCount();
+}
+
+/* ================= 收藏夹：tag 串收藏 =================
+   纯逻辑在 collections-core.js（构建时内联进本页，浏览器与 Node 自测共用同一份代码）。
+   存两处：localStorage 保证离线即时可用；服务端 /api/collections 落盘到 data/collections.json，
+   换端口 / 换浏览器 / 清缓存都还在。两边按 id + updatedAt 合并，删除用墓碑同步（不会被复活）。 */
+const FAVS_KEY = 'animaKB.collections';
+const KBCOL = (typeof KBCollections !== 'undefined') ? KBCollections : null;
+let FAVS = KBCOL ? KBCOL.empty() : { v: 1, items: [], tombstones: {} };
+let FAVS_SRC = '本地';
+let favsTimer = null;
+
+const favsSaveLocal = () => { try{ LS.set(FAVS_KEY, FAVS); }catch(e){} };
+
+function favsSyncCount(){
+  const n = KBCOL ? FAVS.items.length : 0;
+  const a = $('#favn'), b = $('#favstrn'), c = $('#favtagn'), tl = $('#favtags');
+  if(a) a.textContent = n;
+  if(b) b.textContent = n;
+  if(c) c.textContent = FAV.length;
+  if(tl) tl.innerHTML = FAV.length
+    ? FAV.map((t,i)=>`<span class="favtag">${esc(t)}<b data-fadd="${i}" title="加入已选">＋</b><i data-frm="${i}" title="取消收藏">×</i></span>`).join('')
+    : '<div class="favempty">还没有收藏单标签。<br>点任意卡片右上角的 ☆ 就能收藏。</div>';
+}
+const favsSay = t => { const el = $('#favstat'); if(el && t) el.textContent = t; };
+
+/* 写服务端（防抖）：失败只更新面板状态文字，不打断使用 */
+function favsPush(delay){
+  if(!KBCOL) return;
+  clearTimeout(favsTimer);
+  favsTimer = setTimeout(()=>{
+    fetch('api/collections', { method:'POST', headers:{ 'content-type':'application/json' }, body: KBCOL.exportJSON(FAVS) })
+      .then(r => r.json().then(j => ({ ok:r.ok, j })).catch(()=>({ ok:r.ok, j:{} })))
+      .then(({ ok, j }) => {
+        if(ok){ FAVS_SRC = '本地 + 文件'; favsSay(`${FAVS.items.length} 条标签串 · 已写入 data/collections.json`); }
+        else { FAVS_SRC = '仅本地'; favsSay('写文件失败：' + (j.error || '未知错误')); }
+      })
+      .catch(()=>{ FAVS_SRC = '仅本地'; favsSay('离线：暂时只存在浏览器里'); });
+  }, delay == null ? 350 : delay);
+}
+
+async function favsLoad(){
+  if(!KBCOL){ favsSay('收藏模块没加载（viewer/collections-core.js 缺失）'); return; }
+  const local = KBCOL.validate(LS.get(FAVS_KEY, KBCOL.empty())).state;
+  FAVS = local; favsRender();
+  try{
+    const r = await fetch('api/collections', { cache:'no-store' });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const remote = await r.json();
+    const m = KBCOL.mergeStates(local, remote);
+    FAVS = m.state; favsSaveLocal(); favsRender();
+    FAVS_SRC = '本地 + 文件';
+    favsSay(m.added || m.updated ? `已从本地文件合并：新增 ${m.added} 条 · 更新 ${m.updated} 条` : `${FAVS.items.length} 条标签串 · 已与本地文件同步`);
+    if(m.added || m.updated) favsPush(0);
+  }catch(e){
+    FAVS_SRC = '仅本地';
+    favsSay(`${FAVS.items.length} 条标签串 · 没连上服务，只存在浏览器里`);
+  }
+}
+
+function favTime(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+// 「来自」一行：把核心给的原始分类 id（og:attire / g:hair）换成界面上的中文名（服装 / 头发）
+function favFromText(d, it){
+  if(!d || !d.from) return '';
+  const ctx = (it && it.ctx) || {};
+  const raw = String(d.from);
+  if(!ctx.cat) return esc(raw);
+  const g = isGroupId(ctx.cat) ? GROUP_BY_ID.get(ctx.cat) : null;
+  const c = g ? null : CAT_BY_ID.get(ctx.cat);
+  const label = g ? g.name : (c ? c.name : '');
+  return esc(label ? raw.split(ctx.cat).join(label) : raw);
+}
+function favsRender(freshId){
+  if(!KBCOL) return;
+  favsSyncCount();
+  const box = $('#favlist'); if(!box) return;
+  const list = KBCOL.sortedItems(FAVS);
+  if(!list.length){
+    box.innerHTML = '<div class="favempty">还没有收藏标签串。<br>选好标签后点托盘里的「☆ 收藏这串」，整串就存下来了。</div>';
+    favsSay(`${favsSrcText()} · 暂无标签串`);
+    return;
+  }
+  box.innerHTML = list.map(it=>{
+    const d = KBCOL.describe(it);
+    return `<article class="favcard ${it.pinned?'pinned':''} ${it.id===freshId?'fresh':''}" data-id="${esc(it.id)}">
+      <div class="favhd">
+        <input class="favname" data-role="name" value="${esc(it.name)}" title="点这里改名字（回车或点别处生效）">
+        <button class="ghost mini" data-act="pin" title="${it.pinned?'取消置顶':'置顶'}">${it.pinned?'★':'☆'}</button>
+        <button class="ghost mini" data-act="up" title="上移">↑</button>
+        <button class="ghost mini" data-act="down" title="下移">↓</button>
+      </div>
+      <div class="favstr" title="${esc(it.tags.join(', '))}">${esc(it.tags.join(', '))}</div>
+      <input class="favnote" data-role="note" value="${esc(it.note)}" placeholder="备注：用途 / 画风 / 注意事项（可留空）">
+      <div class="favmeta">${d.tags} 个标签 · 收藏于 ${favTime(it.createdAt)}${d.from?' · 来自 '+favFromText(d, it):''}</div>
+      <div class="favacts">
+        <button data-act="reuse" title="把这串放回装配台已选（会覆盖当前已选）">复用为已选</button>
+        <button class="ghost" data-act="search" title="把这串填进搜索框并搜索">用这串搜索</button>
+        <button class="ghost" data-act="copy">复制</button>
+        <button class="ghost del" data-act="del">删除</button>
+      </div>
+    </article>`;
+  }).join('');
+  favsSay(`${favsSrcText()} · ${list.length} 条标签串`);
+}
+const favsSrcText = () => FAVS_SRC;
+
+const favsFind = el => { const c = el.closest ? el.closest('.favcard') : null; return c ? KBCOL.getById(FAVS, c.dataset.id) : null; };
+function favsApply(res, freshId){ FAVS = res.state || res; favsSaveLocal(); favsRender(freshId); favsPush(); }
+
+/* 把当前已选的那串整体收藏 */
+// 收藏时记的「来自哪」上下文：选中组内某个成员分类就记该成员，否则记当前一级组 / 原始分类
+function ctxNow(){
+  const mid = subCatOf(CURSUB);
+  return {
+    cat: mid || curCat,
+    sub: subNameOf(CURSUB) || '',
+    q: ($('#q')||{}).value || '',
+    mode: ($('#smod')||{}).value || ''
+  };
+}
+function collectCurrent(btn){
+  if(!KBCOL) return toast(btn, '收藏模块没加载：viewer/collections-core.js 缺失');
+  if(!SEL.length) return toast(btn, '还没选标签：先点卡片上的 + 加入已选');
+  const cats = {}; SEL.forEach(x => { if(x.cat) cats[x.tag] = x.cat; });
+  const res = KBCOL.add(FAVS, { tags: SEL.map(x=>x.tag), cats, ctx: ctxNow() });
+  if(res.reason === 'dup'){ openFavs(res.dup.id); return toast(btn, `这串已经收藏过了：「${res.dup.name}」`); }
+  if(res.reason !== 'ok') return toast(btn, '收藏失败：' + res.reason);
+  FAVS = res.state; favsSaveLocal(); favsRender(res.item.id); favsPush();
+  toast(btn, `已收藏「${res.item.name}」`);
+  openFavs(res.item.id);
+}
+/* 一键复用：替换已选（保留收藏时的顺序与前缀分层） */
+function favsReuse(it, btn){
+  if(!it) return;
+  const tags = KBCOL.tagList(it), cats = it.cats || {};
+  const n = SEL.length;
+  SEL = tags.map(t => ({ tag: t, cat: cats[t] || '' }));
+  saveSel(); refreshCard(); buildChips();
+  toast(btn, n ? `已回填 ${tags.length} 个标签（覆盖了原来的 ${n} 个）` : `已回填 ${tags.length} 个标签`);
+  closeFavs();
+}
+/* 一键复用：当搜索词（多标签串会被拆成多个词逐个匹配，见 queryTerms） */
+function favsSearch(it, btn){
+  if(!it) return;
+  const tags = KBCOL.tagList(it);
+  const q = KBCOL.searchQueryOf(it);
+  if(!q) return toast(btn, '这串是空的');
+  $('#q').value = q;
+  closeFavs();
+  doSearch();
+  toast(btn, tags.length > 1 ? `已用这串搜索（${tags.length} 个标签逐词匹配）` : '已用这串搜索');
+}
+function favsDelete(it, btn){
+  if(!it) return;
+  if(btn.dataset.armed !== '1'){                       // 两步确认，避免原生弹窗挡住页面
+    btn.dataset.armed = '1'; btn.textContent = '确认删除？';
+    setTimeout(()=>{ if(btn.isConnected){ btn.dataset.armed = ''; btn.textContent = '删除'; } }, 3000);
+    return;
+  }
+  favsApply(KBCOL.remove(FAVS, it.id), null);
+  toast(btn, `已删除「${it.name}」`);
+}
+function favsExport(btn){
+  if(!KBCOL) return;
+  const blob = new Blob([KBCOL.exportJSON(FAVS)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'anima-tag-collections.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  toast(btn, `已导出 ${FAVS.items.length} 条`);
+}
+function favsImportFile(file, btn){
+  if(!file || !KBCOL) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    const r = KBCOL.importState(String(fr.result), { base: FAVS });
+    if(r.error) return toast(btn, '导入失败：' + r.error);
+    FAVS = r.state; favsSaveLocal(); favsRender(); favsPush();
+    toast(btn, `已导入：新增 ${r.added} 条 · 合并重复 ${r.skipped || 0} 条`);
+  };
+  fr.onerror = () => toast(btn, '读文件失败');
+  fr.readAsText(file, 'utf-8');
+}
+/* 排序 / 置顶 / 改名 / 备注 */
+function onFavListClick(e){
+  const card = e.target.closest ? e.target.closest('.favcard') : null;
+  if(!card) return;
+  const it = KBCOL.getById(FAVS, card.dataset.id); if(!it) return;
+  const act = e.target.closest('[data-act]') ? e.target.closest('[data-act]').dataset.act : '';
+  if(act === 'reuse')       return favsReuse(it, e.target);
+  if(act === 'search')      return favsSearch(it, e.target);
+  if(act === 'copy')        return copyText(KBCOL.exportTags(it), e.target, '复制');
+  if(act === 'del')         return favsDelete(it, e.target);
+  if(act === 'pin')         { favsApply(KBCOL.togglePin(FAVS, it.id), it.id); return; }
+  if(act === 'up' || act === 'down'){ favsApply(KBCOL.move(FAVS, it.id, act === 'up' ? -1 : 1), it.id); return; }
+}
+function onFavEdit(e){
+  const el = e.target;
+  const card = el.closest ? el.closest('.favcard') : null;
+  if(!card || !el.dataset.role) return;
+  const it = KBCOL.getById(FAVS, card.dataset.id); if(!it) return;
+  if(el.dataset.role === 'name'){
+    const r = KBCOL.rename(FAVS, it.id, el.value);
+    if(r.item){ FAVS = r.state; el.value = r.item.name; }
+  }else{
+    const r = KBCOL.setNote(FAVS, it.id, el.value);
+    if(r.item) FAVS = r.state;
+  }
+  favsSaveLocal(); favsPush();
+}
+/* 面板开关 */
+const favsOpen = () => { const b = $('#favs'); return !!(b && b.classList.contains('open')); };
+function openFavs(freshId){
+  const box = $('#favs'); if(!box) return;
+  favsRender(freshId);
+  box.classList.add('open');
+  box.setAttribute('aria-hidden','false');
+}
+function closeFavs(){ const box = $('#favs'); if(!box) return; box.classList.remove('open'); box.setAttribute('aria-hidden','true'); }
+/* 右侧「单标签」栏：加入已选 / 取消收藏 */
+function onFavTagsClick(e){
+  const add = e.target.closest && e.target.closest('[data-fadd]');
+  const rm  = e.target.closest && e.target.closest('[data-frm]');
+  if(add){ const t = FAV[+add.dataset.fadd]; if(t) toggleTag(t, ''); }
+  else if(rm){ const t = FAV[+rm.dataset.frm]; if(t) toggleFav(t); }
+  favsSyncCount();
+}
+
+/* ================= 一级分类分组（视图层映射：只改导航，不动任何数据文件） =================
+   把库里 69 个大分类归并成 24 个一级入口（参考 ai-tag-toolbox 的侧栏：一级扁平、带图标与计数）。
+   分组只是导航用的视图：原始分类 id、分片文件、manifest、搜索索引、收藏里存的 cats 全部不变。 */
+const GROUPS = [
+  { id:'g:meta',      name:'质量与元信息',     icon:'📋', cats:['cb:base','og:metatags','og:year-tags','og:subjective','cb:negative'] },
+  { id:'g:character', name:'人物与角色',       icon:'👥', cats:['cb:character'] },
+  { id:'g:series',    name:'作品与 IP',        icon:'📺', cats:['cb:series'] },
+  { id:'g:artist',    name:'画师',             icon:'🎨', cats:['cb:artist'] },
+  { id:'g:body',      name:'身材与身体',       icon:'🧍', cats:['og:body-parts','cb:body','og:skin-color','og:ears'] },
+  { id:'g:face',      name:'面部与表情',       icon:'😊', cats:['og:face','og:makeup'] },
+  { id:'g:eyes',      name:'眼睛',             icon:'👁️', cats:['og:eyes'] },
+  { id:'g:hair',      name:'头发',             icon:'💇', cats:['og:hair','og:hair-color','og:hair-styles'] },
+  { id:'g:outfit',    name:'服装',             icon:'👗', cats:['og:attire','og:sleeves','og:prints','og:patterns'] },
+  { id:'g:limbs',     name:'鞋袜与手部',       icon:'🧦', cats:['og:legwear','og:handwear'] },
+  { id:'g:accessory', name:'道具与装饰',       icon:'🎀', cats:['og:accessories','og:headwear','og:neck-and-neckwear','og:eyewear','cb:items'] },
+  { id:'g:pose',      name:'动作与姿势',       icon:'🤸', cats:['og:posture','og:gestures','og:hands','og:holding-tags','og:verbs-and-gerunds','og:dances'] },
+  { id:'g:scene',     name:'场景与环境',       icon:'🏞️', cats:['og:backgrounds','og:locations','og:real-world-locations','og:water','og:flowers'] },
+  { id:'g:camera',    name:'视角与镜头',       icon:'🎥', cats:['og:image-composition','og:focus-tags'] },
+  { id:'g:style',     name:'画风与风格',       icon:'🖌️', cats:['og:visual-aesthetic','og:fashion-style'] },
+  { id:'g:light',     name:'氛围·光影·特效',   icon:'✨', cats:['og:lighting','og:colors','cb:effects','og:fire','og:theme'] },
+  { id:'g:food',      name:'食物与饮料',       icon:'🍰', cats:['og:food-tags'] },
+  { id:'g:animal',    name:'动物与生物',       icon:'🐾', cats:['og:animals-cats','og:animals-dogs','og:birds','og:creatures','cb:animals'] },
+  { id:'g:tech',      name:'物件与器械',       icon:'🔧', cats:['og:technology','og:companies'] },
+  { id:'g:culture',   name:'运动·音乐·节日·职业', icon:'🎵', cats:['og:audio-tags','og:sports','og:holidays','og:jobs'] },
+  { id:'g:text',      name:'文字与符号',       icon:'🔤', cats:['og:text','og:symbols','og:phrases'] },
+  { id:'g:adult',     name:'成人内容',         icon:'🔞', cats:['cb:nsfw','og:censorship'] },
+  { id:'g:scheme',    name:'成品方案库',       icon:'🧩', cats:['cb:scheme','cb:hanfu'] },
+  { id:'g:other',     name:'其他',             icon:'🏷️', cats:['cb:misc'] }
+];
+const GROUP_BY_ID = new Map(GROUPS.map(g=>[g.id, g]));
+const GROUP_OF_CAT = new Map();       // 原始分类 id → 所属一级组（点「查看这个分类全部」时用来留在组里）
+function groupOfCat(id){ return GROUP_OF_CAT.get(id) || null; }
+let GROUPS_READY = false;
+function buildGroups(){
+  for(const g of GROUPS){
+    g.members = g.cats.map(id=>CAT_BY_ID.get(id)).filter(Boolean);
+    g.count = g.members.reduce((s,c)=>s+c.count, 0);
+    const subs = new Map();
+    for(const c of g.members) for(const s of (c.subs||[])) subs.set(s.name, (subs.get(s.name)||0) + s.count);
+    // 成员分类自己的小分类若与成员同名（如 og:hair 下的「头发」），并进成员那一行，不再重复出 chip
+    const names = new Set(g.members.map(c=>c.name));
+    g.subs = [...subs.entries()].filter(([n])=>!names.has(n)).map(([name,count])=>({name,count}));
+  }
+  GROUP_OF_CAT.clear();
+  for(const g of GROUPS) for(const c of g.members) GROUP_OF_CAT.set(c.id, g);
+  GROUPS_READY = true;
+}
+function curGroup(){ return GROUP_BY_ID.get(curCat) || null; }
+function isGroupId(id){ return typeof id === 'string' && id.startsWith('g:'); }
+// 二级选中值语义：'' = 该一级全部；'cat:<id>' = 组内某个成员分类；'sub:<名>' = 某个小分类
+function subNameOf(v){ return (v && v.startsWith('sub:')) ? v.slice(4) : ''; }
+function subCatOf(v){ return (v && v.startsWith('cat:')) ? v.slice(4) : ''; }
+
+function paintCatBar(){
+  if(!GROUPS_READY) buildGroups();
+  const kind = $('#grp').value;
+  const allCount = CATS.reduce((s,c)=>s+c.count, 0);
+  const list = GROUPS.filter(x=>!kind || x.members.some(c=>c.kind===kind));
+  $('#catbar').innerHTML = [
+    `<button class="cbtn star ${curCat==='__fav__'?'active':''}" data-cat="__fav__" title="收藏夹里的单标签（卡片右上角 ☆ 收藏）">
+      <span class="cico">★</span><span class="cname">收藏</span><b class="n">${FAV.length}</b></button>`,
+    `<button class="cbtn ${curCat===''?'active':''}" data-cat="" title="按分类浏览全部标签">
+      <span class="cico">🗂️</span><span class="cname">全部分类</span><b class="n">${allCount.toLocaleString()}</b></button>`,
+    ...list.map(x=>`<button class="cbtn ${curCat===x.id?'active':''}" data-cat="${x.id}" title="${esc(x.members.map(c=>c.name).join(' · '))}">
+      <span class="cico">${x.icon}</span><span class="cname">${esc(x.name)}</span><b class="n">${x.count.toLocaleString()}</b></button>`)
+  ].join('');
+  paintSubBar();
+}
+// 第二级「细分」条：只在一级选中后出现
+//   一级组未选成员 → 成员分类 chip ＋ 组内小分类 chip；已选成员 → 该成员自己的小分类 chip；单分类 → 它的小分类
+function paintSubBar(){
+  const bar = $('#subbar');
+  const grp = curGroup();
+  const mid = subCatOf(CURSUB);
+  const mem = (grp && mid) ? CAT_BY_ID.get(mid) : null;
+  const c = (!grp && curCat && curCat !== '__fav__') ? CAT_BY_ID.get(curCat) : null;
+  let total = 0, chips = null;
+  if(mem){
+    total = mem.count;
+    chips = (mem.subs && mem.subs.length > 1) ? mem.subs.map(s=>({key:'sub:'+s.name, label:s.name, n:s.count})) : null;
+  }else if(grp){
+    total = grp.count;
+    chips = [];
+    if(grp.members.length > 1) chips.push(...grp.members.map(m=>({key:'cat:'+m.id, label:m.name, n:m.count, mem:true, dot:colorOf(m.id)})));
+    if(grp.subs.length) chips.push(...grp.subs.map(s=>({key:'sub:'+s.name, label:s.name, n:s.count})));
+  }else if(c && c.subs && c.subs.length > 1){
+    total = c.count;
+    chips = c.subs.map(s=>({key:'sub:'+s.name, label:s.name, n:s.count}));
+  }
+  if(!chips || !chips.length){ bar.hidden = true; bar.innerHTML = ''; return; }
+  const nMem = grp && !mem ? grp.members.length : 0;
+  bar.hidden = false;
+  bar.innerHTML = `<span class="clabel">细分</span>`
+    + `<span class="cbtn sm ${(CURSUB===''||mem)?'active':''}" data-sub="" title="${mem?'回到这一级组':'看这一级的全部标签'}">全部 <b>${(grp && !mem ? grp.count : total).toLocaleString()}</b></span>`
+    + chips.map((ch,i)=>`${(i === nMem && nMem) ? '<span class="sep"></span>' : ''}`
+      + `<span class="cbtn sm ${CURSUB===ch.key?'active':''}" data-sub="${esc(ch.key)}" title="${ch.mem?'只看这个分类':'只看这个小分类'}">${ch.dot?`<span class="catdot" style="background:${ch.dot}"></span>`:''}${esc(ch.label)} <b>${ch.n.toLocaleString()}</b></span>`).join('');
+}
+// 主区顶部工具条（当前分类名 / 数量 / 状态 / 清除搜索），对应参考仓库的 .toolbar
+function paintToolbar(){
+  const ico = $('#catTitleIcon'), txt = $('#catTitleText'), cnt = $('#catCnt'), clr = $('#btnClearQ');
+  if(!txt) return;
+  const q = (($('#q')||{}).value || '').trim();
+  const searching = !!q;
+  const grp = curGroup();
+  const c = (!grp && curCat && curCat !== '__fav__') ? CAT_BY_ID.get(curCat) : null;
+  let name = '全部分类', icon = '', n = CATS.reduce((s,x)=>s+x.count, 0), sub = '';
+  if(curCat === '__fav__'){ name = '收藏'; icon = '★'; n = FAV.length; }
+  else if(grp){
+    name = grp.name; icon = grp.icon; n = grp.count;
+    const mid = subCatOf(CURSUB), m = mid ? CAT_BY_ID.get(mid) : null;
+    if(m){ name = grp.name; sub = (m.name === grp.name ? '' : m.name); n = m.count; }
+    const sn = subNameOf(CURSUB);
+    if(sn){
+      sub = sn;
+      // 小分类可能横跨组内多个成员：数量按命中的成员逐个相加
+      const hit = grp.members.filter(x=>(x.subs||[]).some(s=>s.name===sn));
+      if(hit.length) n = hit.reduce((t,x)=>t + ((x.subs.find(s=>s.name===sn)||{}).count || 0), 0);
+    }
+  }else if(c){
+    name = c.name; n = c.count;
+    const sn = subNameOf(CURSUB); if(sn) sub = sn;
+  }
+  if(searching) name = '搜索结果';
+  txt.textContent = sub ? (name + ' · ' + sub) : name;
+  ico.hidden = !icon; if(icon) ico.textContent = icon;
+  cnt.textContent = searching ? '—' : (n.toLocaleString() + ' 条');
+  clr.hidden = !searching;
+}
+async function selectCat(id){
+  curCat = id; CURSUB = '';
+  LS.set('animaKB.cat', id);
+  paintCatBar();
+  $('#q').value = '';
+  if(window.innerWidth <= 900) closeRail();
+  await renderMain();
+  window.scrollTo({top:0});
+}
+function selectSub(v){
+  CURSUB = (v === CURSUB) ? '' : v;
+  paintSubBar();
+  renderMain();
+  window.scrollTo({top:0});
+}
+function selectKind(g){ $('#grp').value = g; paintCatBar(); if(!$('#q').value.trim()) renderMain(); else doSearch(); }
+/* ================= 左侧竖栏：宽度可拖拽 + 收起/展开（宽屏），窄屏一律抽屉 =================
+   宽度：--rail-w（CSS 变量）由 JS 写入 .shell 内联样式；min 168 / max 380 且不超过视口 34%，
+        避免压扁主内容区（1440 基准下最宽 380 ≈ 主区仍剩 1000+）。
+   状态：'on' 展开 ⇄ 'mini' 窄条（66px，只剩图标与活动色条）⇄ 'off' 完全隐藏（Shift+点击 ☰）。
+   持久化：animaKB.rail = 'on' | 'mini' | 'off'（兼容旧值 'off'）；animaKB.railW = 像素宽度（数字）。 */
+const RAIL_W_MIN = 168, RAIL_W_MAX = 380, RAIL_W_KEY = 'animaKB.railW', RAIL_M_KEY = 'animaKB.rail';
+function railMaxAllowed(){ return Math.max(RAIL_W_MIN, Math.min(RAIL_W_MAX, Math.round(window.innerWidth * 0.34))); }
+function railWidth(px){                       // 传数字就设宽（自动夹住），传 null 就回到 CSS 默认值
+  const shell = $('#shell');
+  if(px == null || !isFinite(px)){ shell.style.removeProperty('--rail-w'); return null; }
+  const w = Math.max(RAIL_W_MIN, Math.min(railMaxAllowed(), Math.round(px)));
+  shell.style.setProperty('--rail-w', w + 'px');
+  return w;
+}
+function railWidthSave(px){                   // 存/清 用户宽度；刷新后由 boot 回填
+  try{ (px == null || !isFinite(px)) ? localStorage.removeItem(RAIL_W_KEY) : LS.set(RAIL_W_KEY, Math.round(px)); }catch(e){}
+}
+function railState(){
+  const s = $('#shell');
+  return s.classList.contains('railoff') ? 'off' : (s.classList.contains('railmini') ? 'mini' : 'on');
+}
+function railSet(mode, persist){              // 宽屏三态；窄屏由抽屉逻辑接管（不写状态）
+  const shell = $('#shell');
+  if(window.innerWidth <= 900){
+    const open = mode !== 'off';
+    $('#rail').classList.toggle('open', open);
+    $('#railScrim').classList.toggle('on', open);
+    $('#btnRail').classList.toggle('on', open);
+    $('#btnRail').setAttribute('aria-expanded', open ? 'true' : 'false');
+    syncRailTop();
+    return;
+  }
+  shell.classList.toggle('railmini', mode === 'mini');
+  shell.classList.toggle('railoff', mode === 'off');
+  if(persist !== false) LS.set(RAIL_M_KEY, mode);
+  const on = mode !== 'off';
+  $('#btnRail').classList.toggle('on', on);
+  $('#btnRail').setAttribute('aria-expanded', on ? 'true' : 'false');
+  const mini = $('#btnRailMini');
+  if(mini){ mini.setAttribute('aria-label', mode === 'mini' ? '展开分类栏' : '收起为窄条'); mini.title = (mode === 'mini' ? '展开分类栏' : '收起为窄条') + '（☰ 或 Ctrl+Shift+B）'; }
+  syncRailTop();
+}
+function railToggle(force){                   // ☰ / Ctrl+Shift+B：展开 ⇄ 窄条；Shift+点击：展开 ⇄ 完全隐藏
+  if(window.innerWidth <= 900){ railSet($('#rail').classList.contains('open') ? 'off' : 'on', false); return; }
+  const st = railState();
+  railSet(force === 'off' ? (st === 'off' ? 'on' : 'off') : (st === 'on' ? 'mini' : 'on'));
+}
+function railDragInit(){                      // 拖拽把手：指针拖宽 + ←/→ 微调 + 双击复位
+  const grip = $('#railGrip'), shell = $('#shell'), rail = $('#rail');
+  if(!grip) return;
+  let on = false, x0 = 0, w0 = 0;
+  const stop = e => {
+    if(!on) return;
+    on = false;
+    shell.classList.remove('railresizing');
+    railWidthSave(Math.round(rail.getBoundingClientRect().width));
+    try{ grip.releasePointerCapture(e.pointerId); }catch(_){}
+  };
+  grip.addEventListener('pointerdown', e => {
+    if(window.innerWidth <= 900 || shell.classList.contains('railmini') || shell.classList.contains('railoff')) return;
+    on = true; x0 = e.clientX; w0 = rail.getBoundingClientRect().width;
+    shell.classList.add('railresizing');
+    try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault();
+  });
+  grip.addEventListener('pointermove', e => { if(on) railWidth(w0 + (e.clientX - x0)); });
+  grip.addEventListener('pointerup', stop);
+  grip.addEventListener('pointercancel', stop);
+  grip.addEventListener('dblclick', ()=>{ railWidth(null); railWidthSave(null); });   // 双击 = 复位成默认宽度
+  grip.addEventListener('keydown', e => {
+    if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const cur = Math.round(rail.getBoundingClientRect().width);
+    railWidthSave(railWidth(cur + (e.key === 'ArrowRight' ? 16 : -16)));               // 键盘每次 16px
+    e.preventDefault();
+  });
+}
+function closeRail(){
+  if(window.innerWidth > 900) return;      // 宽屏没有抽屉；避免误清 ☰ 的展开态
+  $('#rail').classList.remove('open');
+  $('#railScrim').classList.remove('on');
+  $('#btnRail').classList.remove('on');
+  $('#btnRail').setAttribute('aria-expanded', 'false');
+}
+/* ============ 底部装配台托盘：高度可拖拽 + 三态收起（完整 / 窄条 / 完全隐藏） ============
+   高度：写 #tray 的内联 height（box-sizing:border-box，含内边距），min 96 / max min(560, 62vh)；
+        多出来的高度由 .trayout 吃掉（flex:1 1 auto），原生 textarea 拖高仍可用。
+   状态：'on' 完整 ⇄ 'min' 窄条（只剩一行按钮）⇄ 'off' 完全隐藏（右下角出现召回胶囊）。
+   持久化：animaKB.tray = 'on' | 'min' | 'off'；animaKB.trayH = 像素高度（数字）。
+   main 的底部留白跟随托盘实际高度（--tray-cover），不会把最后一行卡片压在托盘下面。 */
+const TRAY_H_MIN = 96, TRAY_H_MAX = 560, TRAY_H_KEY = 'animaKB.trayH', TRAY_M_KEY = 'animaKB.tray';
+function trayMaxAllowed(){ return Math.max(TRAY_H_MIN, Math.min(TRAY_H_MAX, Math.round(window.innerHeight * 0.62))); }
+function trayHeight(px){                      // 传数字设高（自动夹住），传 null 回到内容自适应
+  const t = $('#tray');
+  if(!t) return null;
+  if(px == null || !isFinite(px)){ t.style.removeProperty('height'); return null; }
+  const h = Math.max(TRAY_H_MIN, Math.min(trayMaxAllowed(), Math.round(px)));
+  t.style.height = h + 'px';
+  return h;
+}
+function trayHeightSave(px){
+  try{ (px == null || !isFinite(px)) ? localStorage.removeItem(TRAY_H_KEY) : LS.set(TRAY_H_KEY, Math.round(px)); }catch(e){}
+}
+function trayState(){
+  const t = $('#tray');
+  return t.classList.contains('off') ? 'off' : (t.classList.contains('min') ? 'min' : 'on');
+}
+function trayCover(){                         // 让 main 的底部留白跟着托盘高度走（隐藏时只留召回胶囊的位置）
+  const t = $('#tray');
+  if(!t) return;
+  const h = trayState() === 'off' ? 64 : Math.round(t.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--tray-cover', h + 'px');
+}
+function traySet(mode, persist){
+  const t = $('#tray'), peek = $('#trayPeek'), btn = $('#btnMin');
+  t.classList.toggle('min', mode === 'min');
+  t.classList.toggle('off', mode === 'off');
+  if(peek) peek.classList.toggle('on', mode === 'off');
+  if(btn) btn.textContent = mode === 'on' ? '收起' : '展开';
+  if(persist !== false) LS.set(TRAY_M_KEY, mode);
+  trayCover();
+}
+function trayToggle(force){                   // #btnMin / Ctrl+Shift+T：完整 ⇄ 窄条；Shift+点击：完整 ⇄ 完全隐藏
+  const st = trayState();
+  traySet(force === 'off' ? (st === 'off' ? 'on' : 'off') : (st === 'on' ? 'min' : 'on'));
+}
+function trayDragInit(){                      // 顶缘把手：指针拖高 + ↑/↓ 微调 + 双击复位
+  const grip = $('#trayGrip'), t = $('#tray');
+  if(!grip) return;
+  let on = false, y0 = 0, h0 = 0;
+  const stop = e => {
+    if(!on) return;
+    on = false;
+    t.classList.remove('dragging');
+    trayHeightSave(Math.round(t.getBoundingClientRect().height));
+    try{ grip.releasePointerCapture(e.pointerId); }catch(_){}
+  };
+  grip.addEventListener('pointerdown', e => {
+    if(trayState() !== 'on') return;                       // 窄条/隐藏态先展开再拖
+    on = true; y0 = e.clientY; h0 = t.getBoundingClientRect().height;
+    t.classList.add('dragging'); trayHeight(h0);
+    try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault();
+  });
+  grip.addEventListener('pointermove', e => { if(on) trayHeight(h0 - (e.clientY - y0)); });   // 往上拖 = 变高
+  grip.addEventListener('pointerup', stop);
+  grip.addEventListener('pointercancel', stop);
+  grip.addEventListener('dblclick', ()=>{ trayHeight(null); trayHeightSave(null); trayCover(); });   // 双击 = 回到内容自适应
+  grip.addEventListener('keydown', e => {
+    if(e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    const cur = Math.round(t.getBoundingClientRect().height);
+    trayHeightSave(trayHeight(cur + (e.key === 'ArrowUp' ? 16 : -16)));     // 键盘每次 16px
+    e.preventDefault();
+  });
+}
+function trayCoverInit(){                     // 托盘高度/内容一变就重算页面底部留白
+  if(window.ResizeObserver){ try{ new ResizeObserver(trayCover).observe($('#tray')); }catch(e){} }
+  trayCover();
+}
+// 竖栏的 sticky 顶部偏移 = 页头实际高度（页头是 sticky 的，两行高度随断点变化）
+function syncRailTop(){
+  const h = document.querySelector('header');
+  if(h) document.documentElement.style.setProperty('--rail-top', (h.offsetHeight + 1) + 'px');
+}
+
+/* ================= 主区渲染 ================= */
+const CHUNK = 240;         // 单类视图每类首屏渲染的卡片数
+const CHUNK_STEP = 480;    // 每次「加载更多」追加数
+const ITEMS = new Map();   // 卡片 key -> { it, cat }
+const CAT_LIMIT = new Map();  // catId -> 已渲染上限
+
+function cardHTML(it, cat, key, extraPill){
+  const src = imgSrc(it, cat.id);
+  const freq = it.freq ? `<span class="pill f">${esc(it.freq)}</span>` : `<span class="pill u">待验证</span>`;
+  const on = selHas(it.tag), fv = favHas(it.tag);
+  return `<div class="card ${src?'hasimg':''} ${on?'sel':''} ${fv?'fav':''}" data-key="${esc(key)}" data-tag="${esc(it.tag)}" data-cat="${cat.id}">
+    ${src?`<span class="thumb"><img loading="lazy" src="${src}" alt="" onerror="this.closest('.card').classList.remove('hasimg')"></span>`:''}
+    <div class="cbtns">
+      <button class="cbtn2 ${fv?'on':''}" data-fav="1" title="${fv?'取消收藏':'收藏这个标签'}">${fv?'★':'☆'}</button>
+      <button class="cbtn2 ${on?'sel':''}" data-sel="1" title="${on?'从已选移除':'加入已选'}">${on?'×':'+'}</button>
+    </div>
+    <div class="ctag" data-add="1" title="点击加入/移出已选">${esc(it.tag)}</div>
+    <div class="czh">${esc(it.zh||'')}</div>
+    <div class="cmeta"><span class="catdot" style="background:${colorOf(cat.id)}"></span><span>${esc(it.weight||'')}</span>${freq}${extraPill||''}</div>
+  </div>`;
+}
+function catSection(cat, intro){
+  const sn = subNameOf(CURSUB);
+  const sub = sn ? (cat.subs||[]).find(s=>s.name===sn) : null;
+  const n = sub ? sub.count : cat.count;
+  return `<section class="cat" id="cat-${cat.id}" data-cat="${cat.id}">
+    <div class="cathead"><h2><span class="catdot" style="background:${colorOf(cat.id)}"></span> ${esc(cat.name)}${sn?` <span class="subof">· ${esc(sn)}</span>`:''}</h2>
+      <span class="badge">${n} 条</span><span class="badge">${esc(KIND_LABEL[cat.kind]||'')}</span>
+      ${cat.slug?`<a class="badge lnk" href="${esc(cat.url||'#')}" target="_blank" rel="noopener">tag_group:${esc(cat.slug)}</a>`:''}
+      <button class="ghost" data-copycat="${cat.id}" style="margin-left:auto">复制${sn?'本小类':'该类'}全部标签</button></div>
+    ${intro ? `<div class="catintro">${esc(intro)}</div>` : ''}
+    <div class="bodyWrap"></div>
+  </section>`;
+}
+// 渲染某个类别的正文（分块：先 240 张，点「加载更多」再追加）
+// mode='overview' 时是「全部分类」总览：只铺一小段，把「查看更多」当跳转入口（点它进入单类视图）
+function paintCatBody(cat, wrap, limit, mode){
+  const ov = mode === 'overview';
+  const lim = limit || CAT_LIMIT.get(cat.id) || CHUNK;
+  if(!ov) CAT_LIMIT.set(cat.id, lim);
+  const sn = subNameOf(CURSUB);
+  const src = (sn && !ov) ? cat.items.filter(x=>x.sub===sn) : cat.items;
+  let body = '', lastSlot = null, n = 0;
+  for(const it of src){
+    const key = cat.id + '::' + (sn && !ov ? sn + '::' : '') + n++;
+    ITEMS.set(key, { it, cat });
+    if(n > lim) continue;
+    // 左列小组标题：官方大分类一律用当前大分类名（避免跨组标签显示成别的组，如 water 在「食物」里显示「光影」）；
+    // 策展大分类保留自己的 slot（如成品方案库的「自然与户外」），因为那是方案自身的分类。
+    const slotName = cat.kind === 'official' ? cat.name : (it.slot || cat.name);
+    if(slotName !== lastSlot){ body += `<div class="subslot">${esc(slotName)}</div>`; lastSlot = slotName; }
+    body += cardHTML(it, cat, key);
+  }
+  const shown = Math.min(lim, src.length);
+  let more = '';
+  if(src.length > shown){
+    more = ov
+      ? `<div class="more"><button class="ghost" data-only="${cat.id}">查看这个分类全部 ${src.length} 条</button><span>总览模式只预告前 ${shown} 条</span></div>`
+      : `<div class="more"><button class="ghost" data-morecat="${cat.id}">加载更多（已显示 ${shown} / ${src.length}）</button><span>每次追加 ${CHUNK_STEP} 条</span></div>`;
+  }
+  wrap.innerHTML = `<div class="grid">${body}</div>` + more;
+  // 只同步这个分类里刚渲染出来的卡片状态
+  refreshCard(wrap);
+}
+
+// 单个分类的完整视图（一级分组里的成员、或直接选中某个原始分类，都走这里）
+async function renderSingle(c){
+  const main = $('#main');
+  main.innerHTML = catSection(c, c.intro) + `<div class="catintro srcline">来源：${srcLine(c)}</div>`;
+  const wrap = catEl(c.id, '.bodyWrap');
+  wrap.innerHTML = `<div class="empty">正在载入「${esc(c.name)}」…</div>`;
+  try{
+    await ensureLoaded(c.id);
+    paintCatBody(c, wrap);
+    const h2 = catEl(c.id, '.cathead .badge');
+    const sn = subNameOf(CURSUB);
+    const sub = sn ? (c.subs||[]).find(s=>s.name===sn) : null;
+    if(h2) h2.textContent = (sub ? sub.count : c.items.length) + ' 条';
+    paintSubBar();
+  }catch(e){
+    wrap.innerHTML = `<div class="empty">载入失败：${esc(e.message)}<br>确认 <code>画师类/</code> 下有 manifest.json 与该分片文件，或重跑 <code>node scripts/build-hierarchy.mjs</code>。</div>`;
+  }
+}
+// 一级分组视图：组内每个成员一块，滚到哪块才加载哪块（点组的图标行不会一次渲染几万条）
+async function renderGroup(grp){
+  const main = $('#main');
+  const mid = subCatOf(CURSUB), sn = subNameOf(CURSUB);
+  const only = mid ? CAT_BY_ID.get(mid) : null;
+  // 组内成员：CURSUB 保留 'cat:<id>'，工具条与「细分」条就都按这个成员显示
+  if(only) return renderSingle(only);
+  let members = grp.members;
+  if(sn){
+    members = members.filter(c=>(c.subs||[]).some(s=>s.name===sn));
+    if(!members.length){ main.innerHTML = `<div class="empty">「${esc(grp.name)}」里没有小分类「${esc(sn)}」。</div>`; return; }
+    main.innerHTML = `<div class="empty">正在载入「${esc(sn)}」…</div>`;
+    try{ await Promise.all(members.map(c=>ensureLoaded(c.id))); }
+    catch(e){ main.innerHTML = `<div class="empty">载入失败：${esc(e.message)}</div>`; return; }
+  }
+  if(members.length === 1) return renderSingle(members[0]);
+  main.innerHTML = `<div class="catintro">${esc(grp.icon)} 「${esc(grp.name)}」共 ${members.length} 个分类 · ${members.reduce((s,c)=>s+c.count,0).toLocaleString()} 条${sn?`，其中含小分类「${esc(sn)}」`:''}。滚到哪个分类就载入哪个分类；用上面「细分」条可继续收窄。</div>`
+    + members.map(c=>catSection(c)).join('');
+  const io = new IntersectionObserver((ents)=>{
+    for(const en of ents){
+      if(!en.isIntersecting) continue;
+      const id = en.target.dataset.cat, c = CAT_BY_ID.get(id);
+      const wrap = en.target.querySelector('.bodyWrap');
+      io.unobserve(en.target);
+      if(!c || !wrap || wrap.dataset.filled) continue;
+      wrap.dataset.filled = '1';
+      ensureLoaded(id)
+        .then(()=>paintCatBody(c, wrap, OV_CHUNK, sn ? 'sub' : 'overview'))
+        .catch(e=>{ wrap.innerHTML = `<div class="empty">载入失败：${esc(e.message)}</div>`; });
+    }
+  }, {rootMargin:'700px 0px'});
+  main.querySelectorAll('section.cat').forEach(s=>io.observe(s));
+}
+async function renderMain(){
+  const main = $('#main');
+  ITEMS.clear();
+  if(curCat === '__fav__'){ renderFav(); paintToolbar(); return; }
+  const grp = curGroup();
+  if(grp){
+    await renderGroup(grp);
+    paintToolbar();
+    return;
+  }
+  if(curCat){
+    const c = CAT_BY_ID.get(curCat);
+    if(!c){ main.innerHTML = `<div class="empty">没有这个分类。</div>`; paintToolbar(); return; }
+    await renderSingle(c);
+    paintToolbar();
+    return;
+  }
+  // 全部分类：清单驱动，按序渲染所有类目（每类先铺前 OV_CHUNK 条，滚到哪个分类就载入哪个分类）
+  const list = CATS.slice().sort((a,b)=>a.order-b.order).filter(c=>!$('#grp').value || c.kind===$('#grp').value);
+  main.innerHTML = `<div class="catintro">当前是「全部分类」总览：共 ${list.length} 个大分类（${list.reduce((s,c)=>s+c.subs.length,0)} 个小分类）。为避免一次渲染 3 万多条，这里每个分类先只铺前 ${OV_CHUNK} 条，<b>滚到哪个分类就载入哪个分类</b>；左侧竖栏把 ${CATS.length} 个分类归成 ${GROUPS.length} 个一级入口，先点一级、再用「细分」条收窄最快。</div>`
+    + list.map(c=>catSection(c)).join('');
+  // 用 IntersectionObserver 按需填内容：滚到附近才拉分包 + 渲染，避免一次性铺开
+  const io = new IntersectionObserver((ents)=>{
+    for(const en of ents){
+      if(!en.isIntersecting) continue;
+      const id = en.target.dataset.cat;
+      const c = CAT_BY_ID.get(id);
+      const wrap = en.target.querySelector('.bodyWrap');
+      io.unobserve(en.target);
+      if(!c || wrap.dataset.filled) continue;
+      wrap.dataset.filled = '1';
+      ensureLoaded(id)
+        .then(()=>paintCatBody(c, wrap, OV_CHUNK, 'overview'))
+        .catch(e=>{ wrap.innerHTML = `<div class="empty">载入失败：${esc(e.message)}</div>`; });
+    }
+  }, {rootMargin:'700px 0px'});
+  main.querySelectorAll('section.cat').forEach(s=>io.observe(s));
+  paintToolbar();
+}
+const OV_CHUNK = 48;   // 「全部分类」总览里每个分类先铺的条数
+function renderFav(){
+  const main = $('#main');
+  if(!FAV.length){ main.innerHTML = `<div class="empty">收藏夹是空的。<br>在任意卡片右上角点 <b>☆</b> 收藏常用标签，之后在这里一眼拿到。</div>`; return; }
+  const byTag = new Map();
+  for(const c of CATS) if(c.loaded) for(const it of c.items) if(!byTag.has(it.tag)) byTag.set(it.tag, { it, cat: c });
+  const missing = [];
+  const rows = FAV.map(t=>{
+    const hit = byTag.get(t);
+    if(hit) return hit;
+    missing.push(t);
+    return { it: { tag: t, zh: '（收藏项，条目详情待载入）' }, cat: { id: 'artist', name: '收藏' } };
+  });
+  main.innerHTML = `<section class="cat"><div class="cathead"><h2>★ 收藏夹</h2><span class="badge">${FAV.length} 条</span>
+      <button class="ghost" data-copyfav="1" style="margin-left:auto">复制收藏标签</button>
+      <button class="ghost" data-clearfav="1">清空收藏</button></div>
+    <div class="catintro">收藏存在浏览器本地（localStorage），换浏览器或清缓存会丢；数据本身不受影响。</div>
+    <div class="bodyWrap"></div></section>`;
+  const wrap = main.querySelector('.bodyWrap');
+  let html = '<div class="grid">';
+  rows.forEach(({it, cat}, i)=>{ const key = 'fav::' + i; ITEMS.set(key, { it, cat }); html += cardHTML(it, cat, key); });
+  wrap.innerHTML = html + '</div>';
+  refreshCard();
+  if(missing.length){
+    const ids = [...new Set(missing.map(t=>t.startsWith('@')?'artist':'quality'))];
+    runQueue(ids);
+  }
+}
+
+/* ================= 悬浮检视窗 ================= */
+function inspectorShell(){
+  return `<div class="top"><img class="pic" id="ipic" alt=""><div><div class="tv" id="itv"></div><div class="zh" id="izh"></div></div></div>
+  <div class="row"><span>推荐权重</span><span id="iw"></span></div>
+  <div class="row"><span>Danbooru 频次</span><span id="if"></span></div>
+  <div class="row"><span>别名</span><span id="ia"></span></div>
+  <div class="row"><span>置信度</span><span id="ic"></span></div>
+  <div class="note" id="in"></div>
+  <div class="src">来源：<a id="is" target="_blank" rel="noopener"></a></div>
+  <div class="acts"><button class="ghost" id="iadd">加入已选</button><button class="ghost" id="ifav">☆ 收藏</button><button class="ghost" id="icopy">复制标签</button></div>`;
+}
+let inspRec = null;
+function showInsp(el, it, cat){
+  inspRec = { it, cat };
+  const box = $('#insp');
+  const src = imgSrc(it, cat.id);
+  const pic = box.querySelector('#ipic');
+  pic.src = src; pic.style.display = src ? '' : 'none';
+  box.querySelector('#itv').textContent = it.tag;
+  box.querySelector('#izh').textContent = it.zh || '';
+  box.querySelector('#iw').textContent = it.weight || '—';
+  box.querySelector('#if').textContent = it.freq ? it.freq : '待验证（未取证投稿量）';
+  box.querySelector('#ia').textContent = (it.aliases && it.aliases.length) ? it.aliases.join(', ') : '—';
+  box.querySelector('#ic').textContent = it.confidence || '—';
+  box.querySelector('#in').textContent = it.note || (cat && cat.name) || '';
+  const a = box.querySelector('#is'); a.textContent = it.source && it.source.label ? it.source.label : '来源'; a.href = it.source ? it.source.url : '#';
+  const add = box.querySelector('#iadd'), fav = box.querySelector('#ifav');
+  add.textContent = selHas(it.tag) ? '移出已选' : '加入已选';
+  fav.textContent = favHas(it.tag) ? '★ 已收藏' : '☆ 收藏';
+  box.classList.add('show');
+  positionInsp(el);
+}
+function positionInsp(el){
+  const box = $('#insp'), r = el.getBoundingClientRect();
+  const w = box.offsetWidth, h = box.offsetHeight;
+  let x = r.right + 16, y = r.top;
+  if (x + w > innerWidth - 12) x = r.left - w - 16;
+  if (x < 12) x = 12;
+  if (y + h > innerHeight - 12) y = innerHeight - h - 12;
+  if (y < 12) y = 12;
+  box.style.left = x+'px'; box.style.top = y+'px';
+}
+
+/* ================= 装配台（分层排序 + 去重 + 输出） ================= */
+const LAYER = (()=>{
+  const m = {};
+  const put = (l, ids) => ids.forEach(i => m[i] = l);
+  // 0 质量/元信息/年份/安全档 · 2 角色 · 3 作品 · 4 人物外观 · 5 画师画风 · 6 外观动作 · 7 构图光影场景 · 8 其他
+  put(0, ['cb:base','og:year-tags','og:metatags','og:subjective']);
+  put(2, ['cb:character']);
+  put(3, ['cb:series']);
+  put(4, ['cb:body','og:face','og:eyes','og:ears','og:makeup','og:skin-color','og:hair','og:hair-color','og:hair-styles','og:body-parts']);
+  put(5, ['cb:artist','og:fashion-style','og:visual-aesthetic']);
+  put(6, ['og:attire','og:headwear','og:legwear','og:handwear','og:sleeves','og:neck-and-neckwear','og:eyewear','og:accessories','og:patterns','og:prints','og:posture','og:gestures','og:hands','og:holding-tags','og:verbs-and-gerunds','og:dances','cb:items','cb:hanfu']);
+  put(7, ['og:image-composition','og:focus-tags','og:lighting','og:colors','og:backgrounds','og:locations','og:real-world-locations','og:water','og:fire','og:flowers','og:animals-cats','og:animals-dogs','og:birds','og:creatures','og:food-tags','og:technology','og:audio-tags','og:sports','og:jobs','og:holidays','og:companies','og:text','og:symbols','og:phrases','og:theme','cb:animals','cb:effects']);
+  put(8, ['cb:nsfw','cb:negative','og:censorship','cb:scheme','cb:misc']);
+  return m;
+})();
+let LAYER_IDX = new Map();
+function refreshLayer(){
+  for(const c of CATS){
+    if(!c.items || !c.items.length) continue;
+    const l = LAYER[c.id] !== undefined ? LAYER[c.id] : 8;
+    for(const it of c.items){
+      // 「基础与元信息」里的"人数"单独提一层：Anima 官方顺序是 质量 → 人数 → 角色
+      const lv = (c.id === 'cb:base' && it.sub === '人数与画面规模') ? 1 : l;
+      if(!LAYER_IDX.has(it.tag)) LAYER_IDX.set(it.tag, lv);
+    }
+  }
+}
+function layerOf(rec){
+  const tag = typeof rec === 'string' ? rec : rec.tag;
+  if(LAYER_IDX.has(tag)) return LAYER_IDX.get(tag);
+  const catId = typeof rec === 'string' ? '' : rec.cat;
+  return LAYER[catId] !== undefined ? LAYER[catId] : 8;
+}
+function layerOfTag(tag){
+  if(LAYER_IDX.has(tag)) return LAYER_IDX.get(tag);
+  // 索引里没有这个标签（分包还没到、或收藏里的历史项）：退回选中时记下的分类
+  const rec = SEL.find(x => x.tag === tag);
+  if(rec && rec.cat && LAYER[rec.cat] !== undefined) return LAYER[rec.cat];
+  return 8;
+}
+function sortedTags(){
+  return SEL.map((x,i)=>({ tag:x.tag, l: layerOfTag(x.tag), i }))
+    .sort((a,b)=>a.l-b.l || a.i-b.i)
+    .map(o=>o.tag);
+}
+function buildChips(){
+  const n = $('#seln'); if(n) n.textContent = SEL.length;
+  const c = $('#cnt'); if(c) c.textContent = SEL.filter(x => !PREFIX_TAGS.includes(x.tag)).length;
+  const body = SEL.length
+    ? SEL.map((x,i)=>`<span class="traytag"><em>${layerName(layerOfTag(x.tag))}</em>${esc(x.tag)}<i data-rmtag="${i}" title="移除">×</i></span>`).join('')
+    : '<span class="tip">还没有选任何标签。点卡片右上角的 <b>+</b>，或直接点标签名即可加入。</span>';
+  const box = $('#selbox'); if(box) box.innerHTML = body;
+  const chips = $('#chips'); if(chips) chips.innerHTML = body;
+  const tags = sortedTags().filter(t => !PREFIX_TAGS.includes(t));
+  const out = tags.length ? PREFIX_STR + tags.join(', ')
+    : (SEL.length ? '（所选标签已在官方前缀中：masterpiece, best quality, score_7, safe）' : '');
+  const to = $('#trayout'); if(to) to.value = out;
+  const o2 = $('#out'); if(o2) o2.value = out;
+  const tip = $('#traytip'); if(tip) tip.textContent = `${tags.length} 个标签 ｜ ${tags.join(', ').length} 字符`;
+  document.querySelectorAll('[data-rmtag]').forEach(el=>{ el.onclick = ()=>{ const i = Number(el.dataset.rmtag); const t = SEL[i]; if(t) delSel(t.tag); }; });
+}
+// 下标必须与上面 LAYER 的层级号一一对应：0 质量/元信息 1 人数 2 角色 3 作品 4 人物外观 5 画师/画风 6 服装与动作 7 构图光影场景 8 其他
+const LAYER_NAME = ['质量/元信息','人数','角色','作品','人物外观','画师/画风','服装与动作','构图光影场景','其他'];
+const layerName = l => LAYER_NAME[l] || '其他';
+
+function toast(el, text){
+  let t = document.getElementById('toast');
+  if(!t){ t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = text;
+  const r = el.getBoundingClientRect();
+  t.style.left = Math.min(innerWidth - 160, r.left) + 'px';
+  t.style.top = Math.max(10, r.top - 32) + 'px';
+  t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 950);
+}
+function copyText(txt, btn, restore){
+  const done = () => { if(!btn) return; const old = btn.textContent; btn.textContent = '已复制 ✓'; setTimeout(()=>btn.textContent = restore || old, 1200); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, ()=>fallback());
+  else fallback();
+  function fallback(){
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove(); done();
+  }
+}
+
+/* ================= 事件 ================= */
+function attachEvents(){
+  const main = $('#main');
+  let cur = null;
+  main.addEventListener('mousemove', e=>{
+    const c = e.target.closest('.card');
+    if(!c){ $('#insp').classList.remove('show'); cur = null; return; }
+    const rec = ITEMS.get(c.dataset.key);
+    if(!rec){ $('#insp').classList.remove('show'); cur = null; return; }
+    if(cur === c){ positionInsp(c); return; }
+    cur = c; showInsp(c, rec.it, rec.cat);
+  });
+  main.addEventListener('mouseleave', ()=>$('#insp').classList.remove('show'));
+  main.addEventListener('click', e=>{
+    const cp = e.target.closest('[data-copycat]');
+    if(cp){
+      const cat = CAT_BY_ID.get(cp.dataset.copycat);
+      const all = (cat && cat.items) ? cat.items : [];
+      const sn = subNameOf(CURSUB);
+      const list = sn ? all.filter(i=>i.sub === sn) : all;
+      copyText(list.map(i=>i.tag).join(', '), cp, sn ? '复制本小类全部标签' : '复制该类全部标签');
+      return;
+    }
+    if(e.target.closest('[data-copyfav]')){
+      copyText(FAV.join(', '), e.target.closest('[data-copyfav]'), '复制收藏标签'); return;
+    }
+    if(e.target.closest('[data-clearfav]')){
+      if(confirm('清空收藏夹？')){ FAV = []; saveFav(); paintCatBar(); renderFav(); }
+      return;
+    }
+    const oc = e.target.closest('[data-only]');
+    if(oc){
+      const id = oc.dataset.only, g = groupOfCat(id);
+      // 从一级分组视图点「查看这个分类全部」时：留在组里、把该成员选成二级（右侧细分条同步高亮）
+      if(g && curGroup()){
+        curCat = g.id; CURSUB = 'cat:' + id; LS.set('animaKB.cat', curCat);
+        paintCatBar(); renderMain(); window.scrollTo({top:0});
+      }else{
+        selectCat(id);
+      }
+      return;
+    }
+    const mc = e.target.closest('[data-morecat]');
+    if(mc){
+      const id = mc.dataset.morecat, c = CAT_BY_ID.get(id);
+      const wrap = catEl(id, '.bodyWrap');
+      const lim = (CAT_LIMIT.get(id) || CHUNK) + CHUNK_STEP;
+      paintCatBody(c, wrap, lim);
+      return;
+    }
+    const fb = e.target.closest('[data-fav]');
+    if(fb){ toggleFav(fb.closest('.card').dataset.tag); return; }
+    const sb = e.target.closest('[data-sel]');
+    if(sb){ const c = sb.closest('.card'); toggleTag(c.dataset.tag, c.dataset.cat); return; }
+    const clickTag = e.target.closest('.ctag');
+    if(clickTag){
+      // 学习 ai-tag-toolbox 的手感：点标签名 = 加入已选并立刻复制，就地给浮标反馈
+      const card = clickTag.closest('.card');
+      if(!selHas(card.dataset.tag)) toggleTag(card.dataset.tag, card.dataset.cat);
+      copyText(card.dataset.tag, null);
+      toast(clickTag, '已复制 ' + card.dataset.tag);
+      return;
+    }
+    const card = e.target.closest('.card');
+    if(card){ toggleTag(card.dataset.tag, card.dataset.cat); return; }
+  });
+
+  $('#catbar').addEventListener('click', e=>{
+    const b = e.target.closest('.cbtn'); if(!b) return;
+    selectCat(b.dataset.cat);
+  });
+  $('#subbar').addEventListener('click', e=>{
+    const b = e.target.closest('.cbtn'); if(!b) return;
+    selectSub(b.dataset.sub || '');
+  });
+  if($('#btnRail')) $('#btnRail').addEventListener('click', e=>railToggle(e.shiftKey ? 'off' : ''));
+  if($('#btnRailMini')) $('#btnRailMini').addEventListener('click', ()=>railSet(railState() === 'mini' ? 'on' : 'mini'));
+  railDragInit();
+  if($('#railScrim')) $('#railScrim').addEventListener('click', closeRail);
+  if($('#btnClearQ')) $('#btnClearQ').addEventListener('click', ()=>{ $('#q').value = ''; $('#smode').textContent = ''; doSearch(); });
+  $('#grp').onchange = ()=>selectKind($('#grp').value);
+  $('#smod').onchange = ()=>doSearch();
+  let t = null;
+  $('#q').addEventListener('input', ()=>{ clearTimeout(t); t = setTimeout(doSearch, 220); });
+  $('#q').addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); clearTimeout(t); doSearch(); }
+    if(e.key === 'Escape'){ $('#q').value = ''; clearTimeout(t); doSearch(); $('#q').blur(); }
+  });
+  $('#btnImg').onclick = ()=>{
+    showImg = !showImg; localStorage.setItem('animaKB.showImg', showImg ? '1' : '0');
+    $('#btnImg').textContent = '缩略图：' + (showImg ? '开' : '关');
+    if(curCat) renderMain(); else renderFavLast();
+  };
+  $('#btnHow').onclick = ()=>$('#drawer').classList.toggle('open');
+  const tb = $('#btnTheme');
+  if(tb) tb.onclick = e => toggleTheme(e);
+  paintThemeBtn();
+  $('#btnBuild').onclick = $('#btnBuild2').onclick = ()=>$('#drawer').classList.toggle('open');
+  $('#btnClose').onclick = ()=>$('#drawer').classList.remove('open');
+  $('#btnClear').onclick = ()=>{ if(!SEL.length || confirm('清空已选标签？')){ clearSel(); } };
+  $('#btnMin').onclick = e => trayToggle(e.shiftKey ? 'off' : '');
+  if($('#trayPeek')) $('#trayPeek').onclick = ()=> traySet('on');
+  /* 装配台：恢复上次的高度与三态；手机首屏从未设置过、且还没选标签时，先收成窄条免得挡内容 */
+  trayHeight(LS.get(TRAY_H_KEY, null));
+  const savedTray = LS.get(TRAY_M_KEY, null);
+  if(savedTray) traySet(savedTray, false);
+  else traySet((window.innerWidth <= 760 && !SEL.length) ? 'min' : 'on', false);
+  trayDragInit();
+  trayCoverInit();
+  $('#btnCopySel').onclick = ()=>copyText(sortedTags().join(', '), $('#btnCopySel'), '复制已选标签');
+  /* 收藏夹：收藏当前这串 / 打开面板 / 面板内交互 */
+  $('#btnSaveFav').onclick = e => collectCurrent(e.currentTarget);
+  $('#btnFavs').onclick = ()=>favsOpen() ? closeFavs() : openFavs();
+  $('#btnFavClose').onclick = closeFavs;
+  $('#btnFavExport').onclick = e => favsExport(e.currentTarget);
+  $('#btnFavImport').onclick = ()=>$('#favfile').click();
+  $('#favfile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; favsImportFile(f, $('#btnFavImport')); e.target.value = ''; });
+  $('#favlist').addEventListener('click', onFavListClick);
+  $('#favlist').addEventListener('change', onFavEdit);
+  $('#favlist').addEventListener('keydown', e => {
+    if(e.key === 'Enter' && e.target.dataset && e.target.dataset.role){ e.preventDefault(); e.target.blur(); }
+    if(e.key === 'Escape'){ e.target.blur(); }
+  });
+  $('#favtags').addEventListener('click', onFavTagsClick);
+  $('#btnFavTagsCopy').onclick = e => copyText(FAV.join(', '), e.currentTarget, '复制全部');
+  $('#btnFavTagsAdd').onclick = e => {
+    if(!FAV.length) return toast(e.currentTarget, '还没有收藏单标签');
+    let n = 0;
+    FAV.forEach(t => { if(!SEL.some(x => x.tag === t)){ SEL.push({ tag: t, cat: '' }); n++; } });
+    saveSel(); refreshCard(); buildChips();
+    toast(e.currentTarget, n ? `已加入 ${n} 个标签到已选` : '这些标签都已经在已选里了');
+  };
+  $('#btnFavTagsClear').onclick = e => {
+    const btn = e.currentTarget;
+    if(btn.dataset.armed !== '1'){ btn.dataset.armed = '1'; btn.textContent = '确认清空？'; setTimeout(()=>{ if(btn.isConnected){ btn.dataset.armed = ''; btn.textContent = '清空'; } }, 3000); return; }
+    btn.dataset.armed = ''; btn.textContent = '清空';
+    FAV = []; saveFav(); favsSyncCount(); refreshCard(); paintCatBar();
+    toast(btn, '已清空单标签收藏');
+  };
+  $('#btnCopyStr').onclick = ()=>copyText($('#trayout').value, $('#btnCopyStr'), '复制这串');
+  $('#btnCopyAll').onclick = ()=>copyText($('#out').value, $('#btnCopyAll'), '复制整串');
+  $('#btnExport').onclick = ()=>{
+    const body = $('#trayout').value + '\n\n【负向】\n' + $('#neg').value;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([body], {type:'text/plain;charset=utf-8'}));
+    a.download = 'anima-prompt-' + new Date().toISOString().slice(0,10) + '.txt';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  const ib = $('#insp');
+  ib.addEventListener('click', e=>{
+    if(!inspRec) return;
+    const { it, cat } = inspRec;
+    if(e.target.id === 'iadd'){ toggleTag(it.tag, cat && cat.id); showInsp(ib, it, cat); }
+    else if(e.target.id === 'ifav'){ toggleFav(it.tag); showInsp(ib, it, cat); }
+    else if(e.target.id === 'icopy'){ copyText(it.tag, e.target, '复制标签'); }
+  });
+  addEventListener('keydown', e=>{
+    const tag = (e.target.tagName || '').toUpperCase();
+    if(e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA'){ e.preventDefault(); $('#q').focus(); }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); $('#q').focus(); $('#q').select(); }
+    if(e.key === 'Escape'){ $('#insp').classList.remove('show'); closeRail(); }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b'){ e.preventDefault(); $('#drawer').classList.toggle('open'); }
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'b'){ e.preventDefault(); railToggle(); }
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l'){ e.preventDefault(); toggleTheme(); }
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't'){ e.preventDefault(); trayToggle(); }
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f'){ e.preventDefault(); favsOpen() ? closeFavs() : openFavs(); }
+  });
+}
+function renderFavLast(){ if(curCat === '__fav__') renderFav(); else renderMain(); }
+
+/* ================= 搜索 ================= */
+const PER_CAT_CAP = 120;
+const PER_CAT_MORE = 300;
+let LAST_HITS = new Map();
+
+/* 逗号分隔的多标签串：拆成多个词逐个匹配再合并（收藏夹的「用这串搜索」就靠它） */
+function queryTerms(q){
+  const parts = String(q == null ? '' : q).split(/[,，]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+  return parts.length > 1 ? parts : [];
+}
+function exactHits(q){
+  const needle = q.toLowerCase();
+  const terms = queryTerms(q);
+  const where = (r, nd) => {                    // 命中位置：标签名 0 / 别名 1000+ / 中文 2000+
+    const t = r[0].toLowerCase();
+    if(t.includes(nd)) return t.indexOf(nd);
+    if(r[3] && String(r[3]).toLowerCase().includes(nd)) return 1000 + String(r[3]).toLowerCase().indexOf(nd);
+    if(r[4] && String(r[4]).toLowerCase().includes(nd)) return 2000 + String(r[4]).toLowerCase().indexOf(nd);
+    return -1;
+  };
+  const hits = new Map();
+  const g = $('#grp').value;
+  for(const r of ROWS){
+    if(g){ const c = CAT_BY_ID.get(r[1]); if(!c || c.kind !== g) continue; }
+    let row = r, pos = -1;
+    if(terms.length){
+      let hitN = 0;
+      for(const nd of terms){
+        const p = where(r, nd);
+        if(p >= 0){ hitN++; if(pos < 0 || p < pos) pos = p; }
+      }
+      if(!hitN) continue;
+      row = r.slice(); row._m = hitN; row._pos = pos;
+    }else{
+      pos = where(r, needle);
+      if(pos < 0) continue;
+    }
+    if(!hits.has(r[1])) hits.set(r[1], []);
+    hits.get(r[1]).push(row);
+  }
+  for(const arr of hits.values()){
+    arr.sort((a,b)=>{
+      if(terms.length){                                   // 命中标签多的排前面，再按标签名里的位置
+        if((a._m||0) !== (b._m||0)) return (b._m||0) - (a._m||0);
+        return ((a._pos||0) - (b._pos||0)) || ((b[6] ? 1 : 0) - (a[6] ? 1 : 0)) || a[0].localeCompare(b[0]);
+      }
+      const ia = a[0].toLowerCase().indexOf(needle), ib = b[0].toLowerCase().indexOf(needle);
+      return (ia - ib) || ((b[6] ? 1 : 0) - (a[6] ? 1 : 0)) || a[0].localeCompare(b[0]);
+    });
+  }
+  return hits;
+}
+async function fuzzyHits(q){
+  if(queryTerms(q).length) return exactHits(q);           // 多标签串：逐词精确匹配已足够（Fuse 对整串无意义）
+  const f = await ensureFuse();
+  if(!f){
+    $('#smode').textContent = '模糊搜索不可用（vendor/fuse.min.js 缺失），已退回精准匹配';
+    return exactHits(q);
+  }
+  const res = f.search(q);
+  const nq = q.toLowerCase();
+  const sim = s => {
+    s = String(s).toLowerCase();
+    if(!s) return 0;
+    if(s === nq) return 1;
+    if(s.includes(nq)) return 0.92;
+    if(nq.includes(s)) return 0.85;
+    const a = new Set(nq.split('')), b = new Set(s.split(''));
+    let inter = 0; for(const ch of a) if(b.has(ch)) inter++;
+    return inter / Math.max(a.size, b.size);
+  };
+  const words = nq.split(/[\s_]+/).filter(Boolean);
+  const multi = words.length > 1 && words.every(w => /^[\x00-\x7f]+$/.test(w));
+  const minSim = words.length > 1 ? 0.55 : (nq.length >= 6 ? 0.45 : 0.6);
+  const g = $('#grp').value;
+  const hits = new Map();
+  for(const { item, score } of res){
+    const r = ROWS[item.i];
+    if(!r) continue;
+    if(g){ const c = CAT_BY_ID.get(r[1]); if(!c || c.kind !== g) continue; }
+    const tagL = String(r[0]).toLowerCase();
+    if(multi && !words.every(w => tagL.includes(w))) continue;
+    const s = Math.max(sim(r[0]), sim(r[4]) * 0.9, sim(r[3]) * 0.85);
+    if(s < minSim) continue;
+    if(!hits.has(r[1])) hits.set(r[1], []);
+    const row = r.slice();
+    row._score = score * 0.4 + (1 - s) * 0.6;
+    hits.get(r[1]).push(row);
+  }
+  for(const arr of hits.values()) arr.sort((a,b)=>a._score - b._score);
+  return hits;
+}
+async function doSearch(){
+  const q = $('#q').value.trim().toLowerCase();
+  if(!q){ $('#subbar').hidden = true; renderFavLast(); $('#smode').textContent = ''; return; }
+  $('#subbar').hidden = true;
+  $('#smode').textContent = '检索中…';
+  if($('#btnClearQ')) $('#btnClearQ').hidden = false;
+  await loadIndex();
+  const mode = $('#smod').value;
+  const hits = mode === 'fuzzy' ? await fuzzyHits(q) : exactHits(q);
+  paintHits(hits, q, mode);
+}
+function paintHits(hits, q, mode){
+  const terms = queryTerms(q);
+  const main = $('#main');
+  ITEMS.clear();
+  const out = [];
+  let total = 0;
+  for(const c of CATS.slice().sort((a,b)=>a.order-b.order)){
+    const rows = hits.get(c.id);
+    if(!rows || !rows.length) continue;
+    total += rows.length;
+    out.push({ cat: c, rows });
+  }
+  const how = terms.length ? `${terms.length} 个标签逐词命中` : (mode === 'fuzzy' ? '模糊' : '精准');
+  $('#smode').textContent = total
+    ? `${how} ${total} 条 ／ ${out.length} 个分类${mode === 'fuzzy' && !terms.length ? '（按匹配度排序）' : '（按标签名匹配位置排序）'}`
+    : '';
+  if(!total){
+    main.innerHTML = `<div class="empty">没有匹配「${esc(q)}」的标签。<br>试试英文标签名、中文释义或别名；也可把搜索模式切到「模糊搜索」容忍拼写错误。</div>`;
+    return;
+  }
+  LAST_HITS = new Map(out.map(o => [o.cat.id, o.rows]));
+  Promise.all(out.map(o=>ensureLoaded(o.cat.id).catch(()=>{}))).then(()=>{
+    main.innerHTML = out.map(({cat, rows})=>`<section class="cat" id="cat-${cat.id}" data-cat="${cat.id}">
+      <div class="cathead"><h2><span class="catdot" style="background:${colorOf(cat.id)}"></span> ${esc(cat.name)}</h2>
+        <span class="badge">命中 ${rows.length} 条</span><span class="badge">${esc(cat.kind === 'official' ? 'Danbooru 官方组' : '策展分类')}</span>
+        <button class="ghost" data-copyhit="${cat.id}" style="margin-left:auto">复制命中标签</button></div>
+      <div class="bodyWrap"></div></section>`).join('');
+    out.forEach(({cat, rows})=>{
+      const wrap = catEl(cat.id, '.bodyWrap');
+      paintRows(cat, wrap, rows, 0, PER_CAT_CAP);
+    });
+  });
+}
+function pickItem(cat, row){
+  const c = CAT_BY_ID.get(cat.id);
+  if(c && c.loaded){
+    const hit = c.items.find(x => x.tag === row[0]);
+    if(hit) return hit;
+  }
+  const aliases = row[4] ? String(row[4]).split('|').filter(Boolean) : undefined;
+  return { tag: row[0], zh: row[3], weight: row[5], freq: row[6], confidence: row[7],
+           aliases, sub: row[8], official: row[11] === 1 };
+}
+function scoreBadge(row){
+  if(row._score === undefined) return '';
+  const conf = Math.max(0, Math.min(1, 1 - row._score));
+  return `<span class="pill s">匹配度 ${conf.toFixed(2)}</span>`;
+}
+function paintRows(cat, wrap, rows, from, cap){
+  const end = Math.min(rows.length, from + cap);
+  let html = '';
+  for(let k = from; k < end; k++){
+    const key = cat.id + '::s' + k;
+    const it = pickItem(cat, rows[k]);
+    ITEMS.set(key, { it, cat });
+    html += cardHTML(it, cat, key, scoreBadge(rows[k]));
+  }
+  if(from === 0){
+    wrap.innerHTML = `<div class="grid">${html}</div>` + (rows.length > end
+      ? `<div class="more"><button class="ghost" data-morehit="${cat.id}">加载更多（已显示 ${end} / ${rows.length}）</button><span>每次追加 ${PER_CAT_MORE} 条</span></div>` : '');
+  }else{
+    wrap.querySelector('.grid').insertAdjacentHTML('beforeend', html);
+    const btn = wrap.querySelector('[data-morehit]');
+    if(btn){ if(rows.length > end) btn.textContent = `加载更多（已显示 ${end} / ${rows.length}）`; else btn.remove(); }
+  }
+  wrap.dataset.from = end;
+  refreshCard();
+}
+// 搜索结果里的「复制命中标签」与「加载更多」也走主区委托（attachEvents 里统一处理）
+document.addEventListener('click', e=>{
+  const ch = e.target.closest('[data-copyhit]');
+  if(ch){ const rows = LAST_HITS.get(ch.dataset.copyhit) || []; copyText(rows.map(r=>r[0]).join(', '), ch, '复制命中标签'); return; }
+  const mh = e.target.closest('[data-morehit]');
+  if(mh){
+    const id = mh.dataset.morehit;
+    const rows = LAST_HITS.get(id) || [];
+    const wrap = catEl(id, '.bodyWrap');
+    paintRows(CAT_BY_ID.get(id), wrap, rows, Number(wrap.dataset.from || PER_CAT_CAP), PER_CAT_MORE);
+  }
+});
+
+/* ================= 启动 ================= */
+function usage(){
+  return [
+    '**左侧分类栏（两级就到标签）**：24 个**一级入口**（如 服装 / 头发 / 动作与姿势 / 场景与环境）＋「全部分类 / ★ 收藏」，每行带图标与条目数，悬停能看到这一组收了哪些原始分类。点一级 → 右边「细分」条出现组内的**成员分类**与**小分类**（官方小节名已译成中文，如「上衣 / 下装 / 鞋袜」），点一下收窄、再点回「全部」。所以从进页面到看见具体标签**最多两步**；竖栏可用 ☰ 或 `Ctrl/Cmd+Shift+B` 收起（宽屏记住你的选择），窄屏自动变成可滑动抽屉。',
+    '**分类栏宽度与收起**：把鼠标移到竖栏**右缘**会出现一条竖线，左右**拖动即可调宽**（最小 168px、最大 380px，且不超过视口 34%，主内容区不会被压扁）；拖到合适宽度后**刷新会记住**。双击那条竖线复位成默认宽度，聚焦后按 `←` / `→` 可每次微调 16px。☰（或 `Ctrl/Cmd+Shift+B`）在「完整 ⇄ 窄条」之间切换——窄条只留图标与活动色条、把主区还给内容；**Shift + 点击 ☰** 可以完全隐藏整条竖栏（再按一次恢复）。宽度与状态都存在浏览器本地，换页签/刷新都保持。',
+    '**全部分类（总览）**：每个大分类先只铺前 48 条，滚到哪个分类才载入哪个，避免一次渲染三万多条；想看某个大分类的完整列表，用左侧分类栏进去，或点分类里的「查看这个分类全部 N 条」（会留在当前一级组里）。',
+    '**点标签名 = 加入已选 + 立即复制**：鼠标点卡片上的英文标签名，会把它加进底部「已选」并马上写进剪贴板（标签名上方弹一下「已复制」提示）。只想看不想选，就把鼠标停上去看悬浮检视窗。',
+    '**逐个删除**：底部「已选」托盘里每个标签都带一个 `×`，点它就单独删掉这一个；要全清点「一键清空」。卡片右上角的 `+` 变成 `×` 时再点一次也是移出。',
+    '**装配台高度与收起**（底部已选托盘）：鼠标移到托盘**顶缘**会出现一条短杠，上下**拖动即可改高度**（最小 96px、最大 560px，且不超过视口 62%）；拖到合适高度后**刷新会记住**。双击短杠回到「内容自适应」，聚焦后按 `↑` / `↓` 可每次微调 16px。「收起」按钮（或 `Ctrl/Cmd+Shift+T`）在「完整 ⇄ 窄条」之间切换——窄条只留一行按钮，把内容还给页面；**Shift + 点击「收起」**可以整条隐藏，右下角会出现一个「▲ 装配台 ＋ 计数」的小胶囊，点它随时召回来（隐藏时加标签会自动弹出窄条，不用担心点了没反应）。高度与状态都存浏览器本地，换页签/刷新都保持。',
+    '**收藏夹**：卡片右上角 `☆` 收藏常用标签（如常用质量词、固定画师），点左侧分类栏最上面的「★ 收藏」只看收藏。',
+    '**标签串收藏**（页头「★ 收藏夹」或 `Ctrl/Cmd+Shift+F`）：把当前「已选」的整串标签一键存下来（托盘里的「☆ 收藏这串」），可改名、写备注、置顶、上下移动；每条都有两个复用按钮——「复用为已选」把这串放回装配台（覆盖当前已选），「用这串搜索」把它当搜索词。按内容自动去重（忽略顺序/大小写/下划线，重复收藏会直接跳到已有的那条），支持导出 / 导入 JSON。数据存两处：浏览器 localStorage ＋ 服务端 `data/collections.json`（同一局域网/换浏览器/清缓存都还在，两边按 id 合并，删除用墓碑同步）。',
+    '**复制与导出**：托盘上有「复制已选标签」「复制这串」「导出 txt」；分类标题右侧的「复制该类全部标签」在选中小分类时只复制该小类的标签；装配台里还有「复制整串」。标签串按官方顺序分层输出并自动补正向前缀、过滤重复（masterpiece / best quality / score_7 / safe 不会写两遍）。',
+    '**两种搜索**（搜索框右侧下拉）：「精准搜索」按子串匹配标签名/中文释义/别名，适合 `score_7`、`@dairi`、`和服`；「模糊搜索」用本地 Fuse.js 容错拼写（`masterpice` → `masterpiece`）并按匹配度排序。右上「全部分组 / 策展分类 / Danbooru 官方组」下拉能把结果限制在某一大类体系里。`Enter` 立即搜、`Esc` 清空搜索框并回到分类浏览。',
+    '**悬浮检视窗**：鼠标停在卡片上显示完整字段（中文释义、推荐权重、Danbooru 投稿量、别名、置信度、来源），并可直接「加入已选 / 收藏 / 复制标签」。',
+    '**卡片缩略图**：`成品方案库`（背景 / 姿势 / 服装三套方案，共 1,746 个）显示 AnimaTags-DB、Dressing-doll 仓库的真实预览图（jsDelivr CDN）；其余标签用网页即时生成的 data URI 占位图（按标签名取色相 + 首字母，零文件、零额外请求）。顶部「缩略图：开/关」可整体关闭；角色 / 画师 / 作品三类条目太多，默认不显示缩略图。',
+    '**日间 / 夜间模式**：页头右上角的日/月按钮一键切换（或按 `Ctrl/Cmd+Shift+L`）。首次打开跟随系统（`prefers-color-scheme`），你手动切过之后记住你的选择。切换时从按钮位置圆形扩散揭幕（View Transitions），不支持的浏览器自动降级为整页颜色过渡；刷新页面不会闪白/闪黑。',
+    '**视觉与动效**：所有颜色、圆角（卡片 18 / 面板 16 / 按钮与输入 12px）、时长与曲线都收在一套设计令牌里（见 `设计规范.md` 与 `assets/tokens.json`）；页头、底部托盘、装配台抽屉、悬浮检视窗、复制浮标都是毛玻璃质感（`backdrop-filter`，不支持时自动退回不透明表面）。卡片悬停轻微上浮、抽屉滑入、悬浮窗淡入。系统开启「减少动态效果」时全部过渡自动关闭。',
+    '**快捷键**：`/` 或 `Ctrl/Cmd+K` 聚焦搜索框；`Ctrl/Cmd+Shift+B` 分类栏「完整 ⇄ 窄条」；`Ctrl/Cmd+Shift+T` 装配台「完整 ⇄ 窄条」（加 `Shift` 再点按钮＝完全隐藏）；`Ctrl/Cmd+B` 开关底部装配台抽屉；`Ctrl/Cmd+Shift+F` 开关收藏夹；`Ctrl/Cmd+Shift+L` 切换日夜主题；`Enter` 立即搜；`Esc` 关闭悬浮窗 / 收起分类栏抽屉 / 清空搜索框。',
+    '**中文与来源**：中文译名来自 WeiLin 词库（4.98 万条官方译名）＋ ai-tag-toolbox 社区库 + 官方小节/条目英文释义人工与规则合成；仍缺译名的冷门标签（多为极罕见发型、地名、球队、品牌）会显示为占位并在悬浮窗里标注「待补译」，不是编造。',
+    '**数据与更新**：数据按大分类分包在 `画师类/`（manifest.json 清单 + bigs/*.json 分片 + search-index.json）。改数据只需重跑 `node scripts/build-hierarchy.mjs` 再刷新本页，本页代码不用改；生成物不要手改。'
+  ];
+}
+async function boot(){
+  loadImageFlag();
+  let man;
+  try{ man = await fetchJSON(SPLIT + 'manifest.json'); }
+  catch(e){
+    const isFile = location.protocol === 'file:';
+    $('#main').innerHTML = `<div class="empty" style="text-align:left;max-width:820px;margin:24px auto">
+      <b style="font-size:15px">读不到数据分包 <code>画师类/manifest.json</code>${isFile ? '（当前是 file:// 直接打开）' : ''}</b>
+      <p style="margin:10px 0 6px">${isFile
+        ? '数据是用 fetch 按需加载的，浏览器在 <code>file://</code> 下会以跨域为由拒绝，必须用本地小服务打开本页：'
+        : '请确认本地服务是从 <code>anima-tag-kb</code> 目录起的（数据目录要和本页同级）：'}</p>
+      <p style="margin:6px 0">最简单：双击知识库根目录的 <code>启动展览板.cmd</code>（会自动起服务并打开浏览器）。</p>
+      <p style="margin:6px 0">或者手动：<code>cd anima-tag-kb</code> → <code>node scripts/serve-kb.mjs</code> → 访问 <code>http://127.0.0.1:8100/anima-tag-exhibition.html</code></p>
+      <p style="margin:6px 0">数据缺失时另跑 <code>node scripts/build-hierarchy.mjs</code> 重建。</p>
+      <p style="margin:6px 0;opacity:.7">原始错误：${esc(e.message)}</p>
+    </div>`;
+    return;
+  }
+  META = man.meta || {};
+  if(META.field_map) FIELD = META.field_map;
+  CATS.length = 0; CAT_BY_ID.clear(); LAYER_IDX = new Map();
+  for(const c of man.categories.slice().sort((a,b)=>a.order-b.order)){
+    const cat = { ...c, items: [], parts: [], loaded: false };
+    CATS.push(cat); CAT_BY_ID.set(cat.id, cat);
+  }
+  const m = META;
+  const nf = n => (n == null ? '—' : Number(n).toLocaleString());
+  $('#stats').textContent = `模型 ${m.model} ｜ ${nf(m.total)} 条标签 / ${m.bigs} 个大分类 · ${m.subs} 个小分类 ｜ 官方组 ${nf(m.official_tags)} 条 ｜ 已取证频次 ${nf(m.verified_freq)} 条 ｜ 构建 ${m.built_at}`;
+  $('#grp').innerHTML = `<option value="">全部分组</option><option value="curated">策展分类</option><option value="official">Danbooru 官方组</option>`;
+  $('#insp').innerHTML = inspectorShell();
+  $('#howto2').innerHTML = usage().map(h=>`<li>${h.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')}</li>`).join('');
+  curCat = LS.get('animaKB.cat', '') || '';
+  // 旧版本残留的分类 id 直接作废；同时接受新的一级分组 id（g:xxx）与收藏夹
+  if(curCat && curCat !== '__fav__' && !CAT_BY_ID.has(curCat) && !GROUP_BY_ID.has(curCat)) curCat = '';
+  buildGroups();
+  paintCatBar();
+  buildChips();
+  attachEvents();
+  // 左侧分类栏：恢复上次的宽度与状态（宽屏 on/mini/off 三态；off 兼容旧的"完全隐藏"值），窄屏一律收成抽屉
+  railWidth(LS.get(RAIL_W_KEY, null));
+  if(window.innerWidth > 900) railSet(LS.get(RAIL_M_KEY, 'on') === 'mini' ? 'mini' : (LS.get(RAIL_M_KEY, 'on') === 'off' ? 'off' : 'on'), false);
+  else closeRail();
+  syncRailTop();
+  addEventListener('resize', ()=>{                     // 跨断点/改窗口：重算 sticky 偏移、夹住已存宽度并恢复宽屏三态
+    syncRailTop();
+    if(window.innerWidth > 900){
+      if($('#rail').classList.contains('open')){ $('#rail').classList.remove('open'); $('#railScrim').classList.remove('on'); }
+      if($('#btnRail').classList.contains('on') === false) $('#btnRail').classList.add('on');
+      const m = LS.get(RAIL_M_KEY, 'on');
+      railSet(m === 'mini' ? 'mini' : (m === 'off' ? 'off' : 'on'), false);
+      railWidth(LS.get(RAIL_W_KEY, null));
+    }
+  });
+  addEventListener('resize', ()=>{                     // 视口变了：托盘高度重新夹限（不超过 62vh）并重算底部留白
+    trayHeight(LS.get(TRAY_H_KEY, null));
+    trayCover();
+  });
+  favsSyncCount();
+  favsLoad();                       // 先渲染 localStorage，再和服务端 data/collections.json 合并
+  await renderMain();
+  refreshCard();
+  // 后台把分类清单里的分包慢慢拉下来（收藏夹/全部分类/搜索都受益），并发受限不阻塞
+  const small = CATS.filter(c=>c.count <= 2000).map(c=>c.id);
+  const heavy = CATS.filter(c=>c.count > 2000).map(c=>c.id);
+  runQueue([...small, ...heavy]);
+  loadIndex().then(()=>{ $('#smod').disabled = false; }).catch(()=>{});
+}
+$('#smod').disabled = true;
+boot().then(()=>{ $('#btnImg').textContent = '缩略图：' + (showImg ? '开' : '关'); });
+addEventListener('beforeunload', ()=>{ try{ localStorage.setItem('animaKB.cat', JSON.stringify(curCat)); }catch(e){} });
+$('#catbar').addEventListener('click', ()=>{ try{ localStorage.setItem('animaKB.cat', JSON.stringify(curCat)); }catch(e){} }, true);
+</script>
+</body>
+</html>

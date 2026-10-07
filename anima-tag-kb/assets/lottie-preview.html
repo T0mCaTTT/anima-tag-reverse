@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>主题切换动画预览 · Anima 标签工作台</title>
+<style>
+  :root{
+    --bg:#0b0d14; --panel:#141827; --line:rgba(255,255,255,.12); --tx:#e9ecf5; --tx2:#9aa4bd;
+    --ac:#8b6cff; --ac2:#22d3ee; --warn:#fbbf24; --r:18px; --pill:999px;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  html[data-theme="light"]{
+    --bg:#f5f6fa; --panel:#fff; --line:rgba(15,23,42,.12); --tx:#1b2233; --tx2:#5a6478;
+    --ac:#6d4dff; --ac2:#0891b2; --warn:#d97706;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       display:flex;justify-content:center;padding:28px 18px 60px;transition:background .3s var(--ease),color .3s var(--ease)}
+  .box{width:100%;max-width:760px}
+  h1{margin:0 0 6px;font-size:19px;letter-spacing:.2px}
+  .sub{color:var(--tx2);margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+  .card h2{margin:0 0 10px;font-size:13px;color:var(--tx2);font-weight:600;letter-spacing:.4px}
+  .stage{height:120px;display:flex;align-items:center;justify-content:center}
+  .stage svg{width:72px;height:72px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+  button{font:inherit;color:var(--tx);background:color-mix(in srgb,var(--ac) 16%,transparent);
+         border:1px solid color-mix(in srgb,var(--ac) 42%,transparent);border-radius:var(--pill);padding:8px 16px;cursor:pointer;
+         transition:transform .15s var(--ease),background .2s var(--ease)}
+  button:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--ac) 26%,transparent)}
+  button:active{transform:translateY(0) scale(.98)}
+  input[type=range]{flex:1;min-width:180px;accent-color:var(--ac)}
+  code,kbd{background:color-mix(in srgb,var(--tx) 10%,transparent);border-radius:8px;padding:1px 6px;font-size:12.5px}
+  .note{color:var(--tx2);font-size:13px;margin-top:16px;line-height:1.8}
+  .badge{display:inline-block;border-radius:var(--pill);padding:2px 10px;font-size:12px;border:1px solid var(--line);color:var(--tx2)}
+  /* 纯 CSS 版本（离线可用；与 Lottie 同一套曲线参数） */
+  .css-toggle{width:72px;height:72px;position:relative}
+  .css-toggle .rays{position:absolute;inset:0;transition:transform .42s var(--ease),opacity .3s var(--ease)}
+  .css-toggle .moon{position:absolute;inset:0;opacity:0;transform:scale(.35);transition:transform .42s cubic-bezier(.34,1.4,.64,1),opacity .3s var(--ease)}
+  .css-toggle.is-moon .rays{transform:rotate(150deg) scale(.2);opacity:0}
+  .css-toggle.is-moon .moon{opacity:1;transform:scale(1)}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>主题切换动画预览</h1>
+  <div class="sub">资产：<code>assets/theme-toggle.json</code>（Lottie / Bodymovin v5.7.1，48×48 @30fps，60 帧） · 页面内实际用的是同参数的内联 SVG 版本，离线也能跑</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>LOTTIE 播放器</h2>
+      <div class="stage" id="lottie"><span class="badge" id="lstate">加载 lottie-web…</span></div>
+    </div>
+    <div class="card">
+      <h2>CSS 版本（无依赖）</h2>
+      <div class="stage">
+        <div class="css-toggle" id="csstoggle">
+          <svg class="rays" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#fbbf24" d="M24 8.5 26.2 14.6 32 12.4 29.9 18.3 36 19 31.6 23.1 36 27.2 29.9 28 32 33.9 26.2 31.7 24 37.8 21.8 31.7 16 33.9 18.1 28 12 27.2 16.4 23.1 12 19 18.1 18.3 16 12.4 21.8 14.6Z"/>
+            <circle cx="24" cy="24" r="6.6" fill="#fbbf24"/>
+          </svg>
+          <svg class="moon" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="9.6" fill="#22d3ee"/>
+            <circle cx="20.6" cy="20.8" r="1.7" fill="#fff" opacity=".22"/>
+            <circle cx="26.6" cy="26.4" r="2.3" fill="#fff" opacity=".18"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="play">播放 / 暂停</button>
+    <button id="tocss">切换 CSS 版本</button>
+    <input type="range" id="scrub" min="0" max="60" value="0" step="1">
+    <span class="badge" id="frame">0 / 60</span>
+  </div>
+
+  <div class="note">
+    · 曲线：<code>--ease: cubic-bezier(.4,0,.2,1)</code>（420ms 圆形扩散揭幕）、<code>--ease-spring: cubic-bezier(.34,1.4,.64,1)</code>（月亮回弹进场）。<br>
+    · 在 Figma 里用：Tokens Studio 导入 <code>assets/tokens.json</code>；Lottie 用 Anima / LottieFiles / AE-Bodymovin 直接打开 <code>assets/theme-toggle.json</code>。<br>
+    · 预览页需要联网加载 CDN 上的 lottie-web；离线时请看右边的 CSS 版本（两者视觉一致）。
+  </div>
+</div>
+
+<script>
+  /* CSS 版本切换 */
+  const ct = document.getElementById('csstoggle');
+  document.getElementById('tocss').onclick = () => {
+    ct.classList.toggle('is-moon');
+    document.documentElement.dataset.theme = ct.classList.contains('is-moon') ? 'light' : 'dark';
+  };
+
+  /* Lottie 版本：CDN 加载失败时降级提示 */
+  const stage = document.getElementById('lottie'), ls = document.getElementById('lstate');
+  const frameEl = document.getElementById('frame'), scrub = document.getElementById('scrub');
+  function boot(){
+    if (!window.lottie) { ls.textContent = '离线：CDN 不可用（看右侧 CSS 版本）'; return; }
+    const anim = window.lottie.loadAnimation({
+      container: stage, renderer: 'svg', loop: false, autoplay: false,
+      path: 'theme-toggle.json'
+    });
+    ls.remove();
+    let playing = false;
+    document.getElementById('play').onclick = () => {
+      playing = !playing;
+      playing ? anim.play() : anim.pause();
+    };
+    anim.addEventListener('enterFrame', e => {
+      const f = Math.round(e.currentTime);
+      scrub.value = f; frameEl.textContent = f + ' / 60';
+    });
+    anim.addEventListener('complete', () => { playing = false; });
+    scrub.oninput = () => { anim.goToAndStop(Number(scrub.value), true); frameEl.textContent = scrub.value + ' / 60'; };
+  }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js';
+  s.onload = boot; s.onerror = boot;
+  document.head.appendChild(s);
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# 本仓库只放「技能 + 词库运行所需的文件」。
+# 构建原料、原始 dump、本机配置与运行期产物一律不入库（它们仍在发布包的 -full 档或本地保留）。
+
+# ── 构建原料与原始 dump（体积大，且多含第三方数据集的原始 dump） ──
+anima-tag-kb/data/
+anima-tag-kb/categories/
+
+# ── 本机调试脚本与运行期数据 ──
+anima-tag-kb/.tmp/
+anima-tag-kb/data/collections.json
+
+# ── 生成物：可由 scripts/build-*.mjs 重建，或从 Release 的 -full 档取 ──
+anima-tag-kb/tags.json
+anima-tag-kb/tags-index.jsonl
+
+# ── 含本机绝对路径 / 机器专属的配置 ──
+skills/anima-tag-reverse/kb-path.json
+skills/anima-tag-reverse/obs.json
+skills/anima-tag-reverse/obs7.json
+anima-tag-kb/启动展览板.cmd - 快捷方式.lnk
+
+# ── 常规 ──
+node_modules/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.vscode/
+.idea/
+
+# ── 打包工具自身的临时产物 ──
+packaging/.tools/
+packaging/repo/
+packaging/dist/_backup-*/

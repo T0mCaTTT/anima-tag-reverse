@@ -1,0 +1,10 @@
+{
+  "subject": { "count": 1, "kind": "少女", "notes": "银发，侧脸" },
+  "appearance": ["silver hair", "side profile", "双马尾", "red eyes"],
+  "outfit": ["白色连衣裙", "black thighhighs"],
+  "pose": ["坐在窗台上", "双手抱膝"],
+  "scene": ["夜晚的教室", "逆光"],
+  "style": ["soft lighting", "厚涂感"],
+  "artists": ["@dairi"],
+  "negative": ["眼镜", "extra fingers"]
+}
