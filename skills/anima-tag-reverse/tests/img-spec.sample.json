@@ -1,10 +1,41 @@
 {
-  "subject": { "count": 1, "kind": "少女", "notes": "银发，侧脸" },
-  "appearance": ["silver hair", "side profile", "双马尾", "red eyes"],
-  "outfit": ["白色连衣裙", "black thighhighs"],
-  "pose": ["坐在窗台上", "双手抱膝"],
-  "scene": ["夜晚的教室", "逆光"],
-  "style": ["soft lighting", "厚涂感"],
+  "subject": { "count": 1, "gender": "girl", "age": "少女" },
+  "characters": [],
+  "series": [],
+  "appearance": {
+    "hair": "silver hair",
+    "hair_style": "双马尾",
+    "eyes": "red eyes",
+    "expression": "侧脸，嘴角微动",
+    "body": "slim",
+    "skin": "pale skin",
+    "special": ""
+  },
+  "outfit": {
+    "top": "shirt",
+    "bottom": "",
+    "dress": "白色连衣裙",
+    "legwear": "black thighhighs",
+    "footwear": "barefoot",
+    "headwear": "",
+    "accessories": [],
+    "held": ""
+  },
+  "pose": { "action": "坐在窗台上", "hands": "双手抱膝", "legs": "", "facing": "侧身面向窗外" },
+  "scene": { "location": "夜晚的教室", "time": "night", "weather": "", "props": ["窗台"] },
+  "style": {
+    "medium": "anime screenshot",
+    "artist_style": "",
+    "lighting": "soft lighting",
+    "light_direction": "背光",
+    "camera": "from side",
+    "framing": "全身",
+    "composition": "",
+    "palette": "cool colors",
+    "quality": "厚涂感"
+  },
   "artists": ["@dairi"],
-  "negative": ["眼镜", "extra fingers"]
+  "nsfw": "",
+  "negative": ["眼镜", "extra fingers"],
+  "notes": "纯日志：这张图是初稿，整体偏冷。要落标签的观察请写进上面的结构化字段——写在 notes 里的内容不产出标签（历史踩坑：画风与光位曾写在 notes 里，结果整条链路静默漏掉）。"
 }

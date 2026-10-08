@@ -9,8 +9,10 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 开箱即用：运行时**零第三方依赖**，不用联网，不用 `npm install`（词库搜索用本地打包的 Fuse.js）。
 
-- 技能版本 v1.0.0 ｜ 词库构建日 2026-10-06 ｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
+- 技能版本 v1.1.0 ｜ 词库构建日 2026-10-06（与 v1.0.0 相同，词库未变）｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
 - 环境：**Node.js 18+**（Windows / macOS / Linux 通用），不需要 Python、不需要浏览器插件
+
+> **生成声明**：本仓库的全部内容 —— 技能代码（`bin/`、`src/`、`tests/`、`tools/`）、词库的整理与构建流水线、展览板页面与样式、以及所有文档 —— 均由 AI 生成与完成，没有经过人工逐行审阅与实测，请自行评估后再用于生产。能核实的自动化检查只有 `node tests/smoke.mjs` 的 36 条自测与 `node tests/spec-audit.probe.mjs` 的行为探针，除此之外没有别的测试背书。这条只说明内容是怎么产出的，与第 7 节的授权状态是两件不同的事：本仓库未附开源许可证文件，默认保留所有权利，不因上面这句话而改变。
 
 ---
 
@@ -20,13 +22,13 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 ```bash
 cd skills/anima-tag-reverse      # 注意：所有命令都在技能目录里跑
-node tests/smoke.mjs             # 预期：17 通过 / 0 失败
+node tests/smoke.mjs             # 预期：36 通过 / 0 失败
 node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的教堂前"
 ```
 
-看到 `red pupils, girl, dress, church, moonlight, silver hair` 这一行，就说明技能、词库、跨目录定位全都正常。
+看到 `red pupils, girl, dress, black dress, church, moonlight, silver hair` 这一行，就说明技能、词库、跨目录定位全都正常。
 
-不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.0.0.zip`（精简档，3.4 MB）解压即用，包根目录有一份面向终端用户的 `README.md`。
+不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.1.0.zip`（精简档）解压即用，包根目录有一份面向终端用户的 `README.md`。
 
 ---
 
@@ -37,6 +39,10 @@ anima-tag-reverse/
 ├── README.md                     本文件
 ├── NOTICE-third-party.md         第三方数据来源与署名声明（务必读）
 ├── skills/anima-tag-reverse/     技能本体：SKILL.md、bin/、src/、tests/、tools/
+│   ├── src/nl.mjs                英文自然语言分支（v1.1.0 新增）
+│   ├── src/gaps.mjs              缺项检测与候选项（v1.1.0 新增）
+│   ├── src/hints.mjs             规则补充层：人数 / 性别 / 中文拆解词表（v1.1.0 新增）
+│   └── 功能说明-自然语言分支与补全.md   自然语言与补全功能的主文档（v1.1.0 新增）
 └── anima-tag-kb/                 中文标签知识库
     ├── anima-tag-exhibition.html 展览板页面（数据全在本地）
     ├── viewer/ assets/ vendor/   页面脚本、样式、静态资源、Fuse.js
@@ -70,12 +76,16 @@ node bin/rtag.mjs "场景描述"                    # 默认：单行纯标签�
 node bin/rtag.mjs --format prompt "场景描述"     # 带官方前缀（masterpiece, best quality, score_7, 分级）
 node bin/rtag.mjs --format md "场景描述"         # 分层报告，方便核对选词理由
 node bin/rtag.mjs --format json "场景描述"       # 结构化输出，给程序吃
+node bin/rtag.mjs --nl "场景描述"                # 英文自然语言句子（v1.1.0 新增）
+node bin/rtag.mjs --gaps "场景描述"              # 缺项清单 + 可勾选候选项（v1.1.0 新增）
+node bin/rtag.mjs --check "场景描述"             # 标签 + 负向 + 自然语言 + 缺项，一次给全（v1.1.0 新增）
+node bin/rtag.mjs --broad --check "场景描述"     # 先宽召回再自审，候选池更大（v1.1.0 新增）
 node bin/rtag.mjs --search "blue eyes"          # 单条检索：中文名 / 频次 / 所属分类
 node bin/rtag.mjs --info                        # 词库概况
 node bin/rtag.mjs --help                        # 全部参数
 ```
 
-`--format bare` 与 `--format tags` 是同义词（都输出不带官方前缀的单行标签串）。
+`--format bare` 与 `--format tags` 是同义词（都输出不带官方前缀的单行标签串）。`--nl`、`--gaps`、`--check` 会接管 `--format`；想强制回默认标签串就显式写 `--format tags`。
 
 ### 3.2 装成 DSH 用户技能（在技能中心可见、可开关）
 
@@ -118,17 +128,26 @@ Windows 上也可以双击 `anima-tag-kb/启动展览板.cmd`。端口被占用�
 ```
 SKILL.md              技能定义（frontmatter + 用法），DSH 只读这个文件
 README.md             技能自己的详细说明：匹配逻辑、评级规则、改动记录
+功能说明-自然语言分支与补全.md   自然语言分支与缺项补全的主文档（能力表、实现、示例、已知缺口）
 bin/rtag.mjs          CLI 入口，所有命令都从它进
 src/index.mjs         编排：解析 → 归一化 → 匹配 → 分层 → 合成
-src/parse.mjs         拆句、识别「视角 / 环境 / 动作」等句法槽
+src/parse.mjs         拆句、识别「视角 / 环境 / 动作」等句法槽、人数口径
 src/normalize.mjs     全半角、简繁、错别字与同义词归一
-src/match.mjs         打分与选词（含中文字集兜底相似度）
+src/hints.mjs         规则补充层：人数 / 性别 / 中文拆解 / 短别名等词表
+src/match.mjs         候选召回 + 打分 + 六道压制 + 备选池（含中文字集兜底相似度）
 src/lexicon.mjs       词库加载与索引（读 manifest.json + search-index.json + bigs/*.json）
 src/compose.mjs       按官方顺序合成单行提示词
-src/image-spec.mjs    图像规格（分辨率 / 采样等）建议
+src/nl.mjs            英文自然语言分支（确定性句子骨架 + 措辞表）
+src/gaps.mjs          缺项检测：未匹配 / 关键层为空 / 粒度不足 / 观察缺项 / 多主体不全 / 同维度冲突
+src/image-spec.mjs    图像观察入口与规格建议（默认带缺项自审）
 src/jp-lexicon.mjs    日文标签辅助词典
-src/config.mjs        路径定位：词库在哪、候选链怎么排
-tests/smoke.mjs       17 条端到端自测（中文 / 英文 / 日文 / 图像 / R18 + 中文字集兜底）
+src/config.mjs        路径定位与调参：词库在哪、阈值、宽召回档
+tests/smoke.mjs       36 条端到端自测（中 / 英 / 日 / 图像 / R18 / 中文兜底 + 自然语言 6 + 缺项 4 + CLI 6）
+tests/spec-audit.probe.mjs   行为探针：默认档、必填维度、别名归一、既有契约
+tests/cli-run.probe.mjs      CLI 采集小工具（分离 stdout 与 stderr）
+tests/img-spec.sample.json   图像观察样张
+tests/fat-tags.diag.mjs      诊断脚本：胖标签分布（非断言套件）
+tests/fat-tags-attrib.mjs    诊断脚本：胖标签归因（非断言套件）
 tools/install-dsh-skill.mjs   装到 ~/.dsh/skills（--check / --force）
 tools/toggle-dsh-skill.mjs    开关技能（改 frontmatter 的 disable-model-invocation）
 tools/list-single-cjk.mjs     列出单字中文标签，便于体检词库
@@ -153,12 +172,12 @@ scripts/build-*.mjs        词库重建流水线（需要自备 data/sources/ �
 
 ## 5. 验证方法
 
-按顺序做，四条都过就是完好的。
+按顺序做，五条都过就是完好的。
 
 ```bash
-# 1) 技能自测：17 条用例
+# 1) 技能自测：36 条用例
 cd skills/anima-tag-reverse
-node tests/smoke.mjs                      # 预期：17 通过 / 0 失败
+node tests/smoke.mjs                      # 预期：36 通过 / 0 失败
 
 # 2) 词库定位与元信息
 node bin/rtag.mjs --info                  # 预期：打印「词库：…/anima-tag-kb/画师类」+ bigs 69 / subs 711
@@ -169,7 +188,15 @@ node bin/rtag.mjs "銀髪の少女が桜の木の下で微笑んでいる"
 echo "1girl, silver hair, red eyes, black dress" | node bin/rtag.mjs -
 # 预期：各输出一行英文标签，逗号分隔，不带 masterpiece 之类官方前缀
 
-# 4) 展览板能起
+# 4) 自然语言与缺项自审（v1.1.0 新增）
+node bin/rtag.mjs --nl "银发红瞳的少女，黑色连衣裙，站在月光下的教堂前"
+# 预期：英文句子，例如 One girl. The character has red pupils, church, silver hair. She is wearing a dress, a black dress. …
+node bin/rtag.mjs --gaps "银发红瞳的少女"
+# 预期：### 缺项清单与候选项，含「缺口 N 条，候选项合计 M 个」与 B* / C* 分节
+node bin/rtag.mjs --image-spec tests/img-spec.sample.json > tags.txt
+# 预期：tags.txt 里只有一行纯标签串；缺项摘要与建议写法走 stderr，不污染 stdout
+
+# 5) 展览板能起
 cd ../../anima-tag-kb
 node scripts/serve-kb.mjs 8123 --no-open
 # 预期：日志打印「地址：http://127.0.0.1:8123/anima-tag-exhibition.html」
@@ -191,7 +218,7 @@ curl -X POST http://127.0.0.1:8100/api/collections \
 # Linux / macOS / Git-Bash
 sha256sum -c SHA256SUMS-core.txt          # 预期：OK
 # Windows PowerShell
-Get-FileHash anima-tag-reverse-v1.0.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
+Get-FileHash anima-tag-reverse-v1.1.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
 ```
 
 ---
@@ -225,6 +252,16 @@ Get-FileHash anima-tag-reverse-v1.0.0.zip -Algorithm SHA256   # 与 SHA256SUMS-c
 **重跑 `scripts/build-*.mjs` 报缺文件**
 那是重建词库的流水线，需要 `data/sources/` 原始 dump（**不随本仓库与发布包分发**，见 `anima-tag-kb/README.md` 与 `NOTICE-third-party.md`）。日常使用不需要重建。
 
+**`--image-spec` 为什么在标签串之外还多打了一行字**
+那是缺项自审的摘要，默认开启，写在 **stderr**，所以 `node bin/rtag.mjs --image-spec x.json > tags.txt` 得到的 `tags.txt` 仍然只有一行纯标签串。不想要摘要就加 `--no-gaps`；想直接看候选项用 `--format gaps`（它不受 `--no-gaps` 影响）。
+
+**怎么让它输出英文自然语言句子**
+加 `--nl`（等价于 `--format nl`）。句子是确定性骨架拼的：人数 → 角色外观 → 服装 → 动作 → 场景 → 画风，措辞过一层内置短语表，查不到专属措辞的标签按标签原文出现在句子里。想限制每句短语数量用 `--max-per-sentence N`（默认 12）；骨架本身可以用 `--nl-template` 打印出来。
+注意纯 `--nl` 只打印句子：角色名 / 作品名 / 画师名这类没有句子槽位的标签留在配套的标签行里（API 的 `nl.tagLine`，md 版会作为「标签骨架」一并列出），要一次看全就用 `--format check` 或 `--format json`。
+
+**`--broad` 会让标签变多吗**
+会，它是显式打开的一次性宽召回档：最低分放宽、每分句候选与备选池扩大、词元预算提高，图像样张的标签行从 33 条变成 38 条。默认档不动是为了「同一句话每次跑出同样的标签串」；只在候选不够用（比如缺项候选项太少）时才开它，`--no-broad` 与默认同档。
+
 **用 `--kb` 指错目录会不会静默跑偏**
 不会。从 v1.0.0 起，`--kb` / `ANIMA_KB_DIR` 指向的目录不合格会直接报错退出（退出码 1），不会退回到别的词库。
 
@@ -250,5 +287,6 @@ Get-FileHash anima-tag-reverse-v1.0.0.zip -Algorithm SHA256   # 与 SHA256SUMS-c
 ## 8. 相关
 
 - 技能详细说明（匹配逻辑、评级规则、改动记录）：[`skills/anima-tag-reverse/README.md`](skills/anima-tag-reverse/README.md)
+- 自然语言分支与缺项补全的功能说明：[`skills/anima-tag-reverse/功能说明-自然语言分支与补全.md`](skills/anima-tag-reverse/功能说明-自然语言分支与补全.md)
 - 词库设计、构建流水线与字段约定：[`anima-tag-kb/README.md`](anima-tag-kb/README.md)
 - 69 个大分类 / 711 个小分类全貌：[`anima-tag-kb/分类树概览.md`](anima-tag-kb/分类树概览.md)

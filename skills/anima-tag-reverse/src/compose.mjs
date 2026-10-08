@@ -98,7 +98,7 @@ export function compose(res, negRes = null, opts = {}) {
     const bucket = layers[m.layer] || layers[8];
     if (bucket.tags.length >= maxPerLayer) continue;
     bucket.tags.push({
-      tag: m.tag, zh: m.zh, score: m.score, sim: m.sim, reason: m.reason,
+      tag: m.tag, layer: m.layer, zh: m.zh, score: m.score, sim: m.sim, reason: m.reason,
       freqN: m.freqN, freqStr: m.freqStr || fmtFreq(m.freqN), conf: m.conf,
       big: m.big, bigName: m.bigName, sub: m.sub, official: m.official, clauses: m.clauses
     });

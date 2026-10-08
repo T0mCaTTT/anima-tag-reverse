@@ -8,6 +8,7 @@ anima-tag-kb/categories/
 # ── 本机调试脚本与运行期数据 ──
 anima-tag-kb/.tmp/
 anima-tag-kb/data/collections.json
+skills/anima-tag-reverse/.probe-out.json
 
 # ── 生成物：可由 scripts/build-*.mjs 重建，或从 Release 的 -full 档取 ──
 anima-tag-kb/tags.json

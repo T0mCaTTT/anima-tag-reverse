@@ -148,6 +148,7 @@ export const SINGLE_CJK_OK = new Set('蹲跪趴爬跳跑走站坐躺哭笑亲抱
 export const SCORE = {
   base: 0.68,              // 相似度之外的保底分（保证冷门但精准的标签不被高频标签压掉）
   freq: 0.32,              // 频次分占比
+  medianFs: 0.42,          // 无投稿量数据的条目（约 12%）按「中位标签的频次分」给中性先验（实测中位数 0.4206）
   conf: { 高: 1.05, 中: 1.0, 待验证: 0.94 },
   hintBoost: 1.22,         // 命中提示层
   hintPenalty: 0.9,        // 提示层之外
@@ -155,6 +156,22 @@ export const SCORE = {
   minSim: 0.52,            // 相似度下限（纯相似度路径）
   topPerClause: 3,         // 每个分句最多留几个候选
   exact: { tag: 1.0, zh: 0.97, alias: 0.93, jp: 0.95, phrase: 0.88 }
+};
+
+/**
+ * 宽召回档（CLI `--broad` / `broad:true`）。
+ * 默认档的阈值是为了「宁可少给」——默认输出形状被一批回归用例锁着，不能动；
+ * 补全场景（缺项检测、候选清单、自然语言分支）需要另一套更宽松的阈值去多捞候选，
+ * 所以单独开一档，只在显式要求时生效，默认行为一个字节都不变。
+ */
+export const BROAD = {
+  minScore: 0.38,
+  minSim: 0.44,
+  topPerClause: 6,
+  candidateBudget: 6000,   // recallTokens 的预算上限
+  surfaceTexts: 24,        // 每条标签参与比对的表面数
+  altPerLayer: 12,         // 每层保留多少条备选（供给补全清单）
+  altTotal: 80             // 备选总量上限
 };
 
 /** 语义提示：描述里出现这些词，说明用户要的是哪一层/哪一类标签 */

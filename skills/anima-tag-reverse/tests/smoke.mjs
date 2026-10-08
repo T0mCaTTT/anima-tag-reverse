@@ -8,7 +8,7 @@
  * 每个用例给 must（必须命中）与 never（绝不能出现）两组断言。
  * never 里的标签都是历史上真实出现过的误召回，留着当回归护栏。
  */
-import { reverseText, reverseImageSpec, getLexicon, kbInfo } from '../src/index.mjs';
+import { reverseText, reverseImageSpec, getLexicon, kbInfo, buildNaturalLanguage } from '../src/index.mjs';
 import { _internal as M } from '../src/match.mjs';
 
 const { simFast } = M;
@@ -33,6 +33,24 @@ const TEXT_CASES = [
     text: '双马尾',
     must: ['twintails'],
     never: ['high ponytail', 'short ponytail', 'wide_ponytail', 'side ponytail']
+  },
+  {
+    name: '中文 · 分句写的人数（两个女孩，一个男孩）',
+    text: '两个女孩，一个男孩',
+    must: ['2girls', '1boy'],
+    never: ['1girl', '2boys', '3girls']
+  },
+  {
+    name: '中文 · 人数紧写（三男两女）',
+    text: '三男两女',
+    must: ['3boys', '2girls'],
+    never: ['1girl', '1boy', 'solo']
+  },
+  {
+    name: '中文 · 单人仍出 solo',
+    text: '一个女孩站在阳台上',
+    must: ['1girl', 'solo', 'balcony'],
+    never: ['2girls', '1boy']
   },
   {
     name: '英文 · 长句',
@@ -160,10 +178,10 @@ const lex = getLexicon();
 
 for (const c of [...TEXT_CASES, ...SPEC_CASES]) {
   const r = runCase(c);
-  if (r.ok) { pass++; console.log(`✅ ${c.name}`); }
+  if (r.ok) { pass++; console.log(`[通过] ${c.name}`); }
   else {
     fail++;
-    console.log(`❌ ${c.name}`);
+    console.log(`[失败] ${c.name}`);
     if (r.miss.length) console.log(`   缺： ${r.miss.join(', ')}`);
     if (r.bad.length) console.log(`   多了： ${r.bad.join(', ')}`);
   }
@@ -180,8 +198,171 @@ for (const [a, b, min, why] of [
 ]) {
   const s = simFast(a, lex.fpOf(a), b, lex);
   const ok = s >= min;
-  if (ok) { pass++; console.log(`✅ 中文字集兜底 · ${a} ↔ ${b}（${why}，sim=${s.toFixed(2)}）`); }
-  else { fail++; console.log(`❌ 中文字集兜底 · ${a} ↔ ${b}（${why}，sim=${s.toFixed(2)}，期望 ≥${min}）`); }
+  if (ok) { pass++; console.log(`[通过] 中文字集兜底 · ${a} ↔ ${b}（${why}，sim=${s.toFixed(2)}）`); }
+  else { fail++; console.log(`[失败] 中文字集兜底 · ${a} ↔ ${b}（${why}，sim=${s.toFixed(2)}，期望 ≥${min}）`); }
+}
+
+// ---- 英文自然语言分支（新功能回归）----
+// 只断言「句子里必须出现什么」与「不能出现什么」，不锁死整句措辞，避免措辞微调就红。
+const NL_CASES = [
+  {
+    name: '自然语言 · 人数句用 one girl',
+    text: '一个穿白色连衣裙的银发女孩站在樱花树下，微笑，侧脸',
+    has: [/^One girl\./, /white dress/, /seen in profile|profile/],
+    never: [/^Girl\./, /The scene is set[^.]*silver hair/]
+  },
+  {
+    name: '自然语言 · 动作不进场景句',
+    text: '长发蓝发少女坐在教室里看书，夜晚，逆光',
+    has: [/One girl\./, /sitting/, /reading/, /classroom/],
+    never: [/The scene is set[^.]*reading/]
+  },
+  {
+    name: '自然语言 · 多主体人数与性别都要写出',
+    text: '两个人，雨中，一个男孩一个女孩，撑伞',
+    has: [/Two girls and one boy|One girl and one boy/, /umbrella/],
+    never: [/^Two girls\.$/m, /heart hands duo(?!\s*$)/, /She is wearing.*heart/]
+  },
+  {
+    name: '自然语言 · 确定性（同一输入两次结果一致）',
+    text: '银色长发的女孩坐在窗边，夕阳',
+    has: [/One girl\./],
+    deterministic: true
+  },
+  {
+    name: '自然语言 · 分句写的人数要合起来读',
+    text: '两个女孩，一个男孩',
+    has: [/Two girls and one boy/],
+    never: [/One girl and one boy/, /^One girl\./]
+  },
+  {
+    name: '自然语言 · 人数紧写（三男两女）',
+    text: '三男两女',
+    has: [/Three boys and two girls/],
+    never: [/Three girls/]
+  }
+];
+
+for (const c of NL_CASES) {
+  const a = buildNaturalLanguage(reverseText(c.text, {}));
+  const b = c.deterministic ? buildNaturalLanguage(reverseText(c.text, {})) : null;
+  const bad = [];
+  for (const re of c.has) if (!re.test(a.text)) bad.push(`缺 ${re}`);
+  for (const re of c.never || []) if (re.test(a.text)) bad.push(`多了 ${re}`);
+  if (b && a.text !== b.text) bad.push('两次结果不同');
+  if (bad.length) { fail++; console.log(`[失败] ${c.name}`); console.log(`   问题： ${bad.join(', ')}`); console.log(`   → ${a.text}`); }
+  else { pass++; console.log(`[通过] ${c.name}`); }
+}
+
+// ---- 缺项检测（新功能回归）----
+// 断言「该报的缺口报了、不该报的别报」，不锁死候选项数量。
+const GAP_CASES = [
+  {
+    name: '缺项 · 空输入应报关键层为空',
+    text: '站在那里',
+    needKinds: ['emptyLayer'],
+    minTotal: 2
+  },
+  {
+    name: '缺项 · 同维度冲突要报出来',
+    text: '一个女孩，白天，夜晚，长发，短发',
+    needKinds: ['conflict'],
+    needIds: ['E-day-night', 'E-longhair-shorthair']
+  },
+  {
+    name: '缺项 · 多主体缺外观要报 multiSubject',
+    text: '两个人，一个男孩一个女孩，撑伞',
+    needKinds: ['multiSubject']
+  },
+  {
+    name: '缺项 · 完整描述不该报冲突',
+    text: '一个银发蓝眼的女孩穿着白色连衣裙站在樱花树下，微笑，侧脸，上半身，白天',
+    neverKinds: ['conflict'],
+    neverIds: []
+  }
+];
+
+for (const c of GAP_CASES) {
+  const res = reverseText(c.text, { gaps: true, alternatives: true, broad: true });
+  const gaps = res.gaps || [];
+  const kinds = new Set(gaps.map(g => g.kind));
+  const ids = new Set(gaps.map(g => g.id));
+  const bad = [];
+  for (const k of c.needKinds || []) if (!kinds.has(k)) bad.push(`缺 kind=${k}`);
+  for (const id of c.needIds || []) if (!ids.has(id)) bad.push(`缺 id=${id}`);
+  for (const k of c.neverKinds || []) if (kinds.has(k)) bad.push(`多了 kind=${k}`);
+  for (const id of c.neverIds || []) if (ids.has(id)) bad.push(`多了 id=${id}`);
+  if (c.minTotal && gaps.length < c.minTotal) bad.push(`缺口只有 ${gaps.length} 条（期望 ≥${c.minTotal}）`);
+  if (bad.length) { fail++; console.log(`[失败] ${c.name}`); console.log(`   问题： ${bad.join(', ')}`); console.log(`   缺口： ${gaps.map(g => g.id).join(', ') || '（无）'}`); }
+  else { pass++; console.log(`[通过] ${c.name}`); }
+}
+
+// ---- CLI 接线（新开关必须真的改变输出形态）----
+// 教训：--gaps / --check / --nl 起初只置布尔开关、不改 opt.format，而输出分支判的是 opt.format，
+// 于是这三个开关静默返回默认标签串。这条回归就是防止再犯。
+const { execFileSync } = await import('node:child_process');
+const { fileURLToPath } = await import('node:url');
+const { dirname, join } = await import('node:path');
+
+const SKILL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
+const CLI = join(SKILL_DIR, 'bin', 'rtag.mjs');
+
+function runCli(args) {
+  return execFileSync(process.execPath, [CLI, ...args], {
+    cwd: SKILL_DIR,
+    encoding: 'utf8',
+    maxBuffer: 8 * 1024 * 1024
+  });
+}
+
+const CLI_CASES = [
+  {
+    name: 'CLI · 默认输出仍是单行标签串',
+    args: ['一个女孩站在阳台上'],
+    has: [/^1girl, solo, balcony/],
+    never: [/^##/m, /\n/]
+  },
+  {
+    name: 'CLI · --gaps 输出勾选表',
+    args: ['一个女孩站在阳台上', '--gaps'],
+    has: [/^### 缺项清单与候选项/m, /\[ \] `/]
+  },
+  {
+    name: 'CLI · --check 四段齐全',
+    args: ['一个女孩站在阳台上', '--check'],
+    has: [/^## 标签串/m, /^## 负向串/m, /^## 英文自然语言/m, /^### 缺项清单与候选项/m]
+  },
+  {
+    name: 'CLI · --nl 输出自然语言而非标签串',
+    args: ['一个女孩站在阳台上', '--nl'],
+    has: [/^One girl\./],
+    never: [/^1girl, solo/]
+  },
+  {
+    name: 'CLI · --format tags 时 --nl 只当附加产物',
+    args: ['一个女孩站在阳台上', '--nl', '--format', 'tags'],
+    has: [/^1girl, solo, balcony/],
+    never: [/^One girl\./]
+  },
+  {
+    name: 'CLI · --format json 附带新产物',
+    args: ['一个女孩站在阳台上', '--broad', '--nl', '--gaps', '--format', 'json'],
+    has: [/"naturalLanguage"/, /"gapsSummary"/, /"alternatives"/]
+  }
+];
+
+for (const c of CLI_CASES) {
+  let out = '';
+  const bad = [];
+  try {
+    out = runCli(c.args).replace(/\n$/, ''); // console.log 的收尾换行不算多行
+  } catch (e) {
+    bad.push(`CLI 退出非 0：${e.message.split('\n')[0]}`);
+  }
+  for (const re of c.has) if (!re.test(out)) bad.push(`缺 ${re}`);
+  for (const re of c.never || []) if (re.test(out)) bad.push(`多了 ${re}`);
+  if (bad.length) { fail++; console.log(`[失败] ${c.name}`); console.log(`   问题： ${bad.join(', ')}`); console.log(`   → ${out.slice(0, 200).replace(/\n/g, '⏎')}`); }
+  else { pass++; console.log(`[通过] ${c.name}`); }
 }
 
 console.log(`\n${pass} 通过 / ${fail} 失败 · ${Date.now() - t0}ms`);
