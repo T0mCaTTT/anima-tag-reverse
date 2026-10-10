@@ -1,0 +1,28 @@
+{
+  "subject": { "count": 1, "gender": "girl" },
+  "appearance": {
+    "hair": "purple hair",
+    "hair_style": "long hair",
+    "eyes": "green eyes",
+    "expression": "serious",
+    "body": "tall"
+  },
+  "outfit": {
+    "top": "jacket",
+    "bottom": "jeans",
+    "footwear": "boots"
+  },
+  "pose": { "action": "leaning forward", "hands": "crossed arms", "facing": "three quarter" },
+  "scene": { "location": "neon city", "time": "night", "weather": "rain" },
+  "style": {
+    "medium": "anime screenshot",
+    "lighting": "neon light",
+    "light_direction": "backlighting",
+    "camera": "from below",
+    "framing": "cowboy shot",
+    "palette": "pastel colors",
+    "quality": "film grain"
+  },
+  "artists": ["@third"],
+  "negative": ["hat"]
+}

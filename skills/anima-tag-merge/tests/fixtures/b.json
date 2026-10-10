@@ -1,0 +1,28 @@
+{
+  "subject": { "count": 1, "gender": "girl" },
+  "appearance": {
+    "hair": "black hair",
+    "hair_style": "short hair",
+    "eyes": "brown eyes",
+    "expression": "smile",
+    "body": "petite"
+  },
+  "outfit": {
+    "top": "sailor shirt",
+    "bottom": "pleated skirt",
+    "legwear": "white kneehighs",
+    "footwear": "loafers"
+  },
+  "pose": { "action": "standing", "hands": "hand on hip", "facing": "front" },
+  "scene": { "location": "street", "time": "day", "weather": "clear sky", "props": ["bag"] },
+  "style": {
+    "medium": "anime screenshot",
+    "lighting": "hard light",
+    "light_direction": "light source on the left",
+    "camera": "eye level",
+    "framing": "upper body",
+    "palette": "warm colors"
+  },
+  "artists": ["@someone"],
+  "negative": ["extra fingers"]
+}

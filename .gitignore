@@ -18,6 +18,9 @@ anima-tag-kb/tags-index.jsonl
 skills/anima-tag-reverse/kb-path.json
 skills/anima-tag-reverse/obs.json
 skills/anima-tag-reverse/obs7.json
+# 姊妹技能：engine-path.json 由 tools/install-dsh-skill.mjs 在安装时按本机路径生成
+skills/anima-tag-merge/engine-path.json
+skills/anima-tag-character/engine-path.json
 anima-tag-kb/启动展览板.cmd - 快捷方式.lnk
 
 # ── 常规 ──
