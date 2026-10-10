@@ -9,7 +9,20 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 开箱即用：运行时**零第三方依赖**，不用联网，不用 `npm install`（词库搜索用本地打包的 Fuse.js）。
 
+## 三个技能
+
+本仓库的 `skills/` 下有三个技能，共用同一套词库与分层排序。`anima-tag-reverse` 是引擎，另两个是它的姊妹技能，各管一件它不做的事：
+
+| 技能 | 干什么 | 一句话例子 |
+|---|---|---|
+| **[`anima-tag-reverse`](skills/anima-tag-reverse/README.md)** | 单图 / 纯文本 → 标签串（引擎本体） | 「银发红瞳的少女站在教堂前」→ `red pupils, girl, church, silver hair` |
+| **[`anima-tag-merge`](skills/anima-tag-merge/README.md)** | **多图**按自然语言指令融合成一条标签串 | 「图1的姿势换到图2的人身上」→ 图2 的人 + 图1 的姿势 |
+| **[`anima-tag-character`](skills/anima-tag-character/README.md)** | 「**具体作品 + 具体角色**」→ 精确角色/作品标签 | 「原神 可莉」→ `klee (genshin impact), genshin impact` |
+
+三者可串联：`anima-tag-character` 先把观察 JSON 里的中文角色名就地修正，再喂给 `anima-tag-reverse` 或 `anima-tag-merge`。各技能的详细说明见其目录下的 `README.md` 与 `SKILL.md`。
+
 - 技能版本 v1.1.0 ｜ 词库构建日 2026-10-06（与 v1.0.0 相同，词库未变）｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
+- 仓库含三个技能：`anima-tag-reverse` v1.1.0、`anima-tag-merge`、`anima-tag-character`（后两者为姊妹技能，复用同一套词库）
 - 环境：**Node.js 18+**（Windows / macOS / Linux 通用），不需要 Python、不需要浏览器插件
 
 > **生成声明**：本仓库的全部内容 —— 技能代码（`bin/`、`src/`、`tests/`、`tools/`）、词库的整理与构建流水线、展览板页面与样式、以及所有文档 —— 均由 AI 生成与完成，没有经过人工逐行审阅与实测，请自行评估后再用于生产。能核实的自动化检查只有 `node tests/smoke.mjs` 的 36 条自测与 `node tests/spec-audit.probe.mjs` 的行为探针，除此之外没有别的测试背书。这条只说明内容是怎么产出的，与第 7 节的授权状态是两件不同的事：本仓库未附开源许可证文件，默认保留所有权利，不因上面这句话而改变。
@@ -43,6 +56,12 @@ anima-tag-reverse/
 │   ├── src/gaps.mjs              缺项检测与候选项（v1.1.0 新增）
 │   ├── src/hints.mjs             规则补充层：人数 / 性别 / 中文拆解词表（v1.1.0 新增）
 │   └── 功能说明-自然语言分支与补全.md   自然语言与补全功能的主文档（v1.1.0 新增）
+├── skills/anima-tag-merge/       姊妹技能：多图融合（复用 reverse 的词库与排序）
+│   ├── bin/merge.mjs             CLI：--img a.json --img b.json "把图1的姿势换到图2的人身上"
+│   └── src/intent.mjs            跨图自然语言理解（图指代 / 维度词 / 组合宏 / 方向判定）
+├── skills/anima-tag-character/   姊妹技能：作品 + 角色 → 精确标签（复用 reverse 的词库）
+│   ├── bin/char.mjs              CLI：resolve / series / search / verify / patch
+│   └── src/resolve.mjs           作品消歧、残条目降权、未命中如实报「库里没有」
 └── anima-tag-kb/                 中文标签知识库
     ├── anima-tag-exhibition.html 展览板页面（数据全在本地）
     ├── viewer/ assets/ vendor/   页面脚本、样式、静态资源、Fuse.js
@@ -98,12 +117,30 @@ node tools/install-dsh-skill.mjs --force    # 覆盖；覆盖前自动备份到 
 
 装完重启 DSH（或在技能中心刷新），`anima-tag-reverse` 就会出现在「用户技能」列表里。安装脚本会在目标机器上**重新生成** `kb-path.json`，写的是你当前这套词库的绝对路径；以后挪动词库目录，重跑一次安装脚本即可。
 
+**姊妹技能同理**，各自带一份安装脚本：
+
+```bash
+cd skills/anima-tag-merge
+node tools/install-dsh-skill.mjs            # 复制到 ~/.dsh/skills/anima-tag-merge
+
+cd ../anima-tag-character
+node tools/install-dsh-skill.mjs            # 复制到 ~/.dsh/skills/anima-tag-character
+```
+
+两个姊妹技能**不重复打包词库**，它们靠安装时生成的 `engine-path.json` 指向 `anima-tag-reverse` 的安装目录来复用引擎。所以**先装 `anima-tag-reverse`，再装它们**；之后挪动 `anima-tag-reverse` 的目录，姊妹技能的 `engine-path.json` 要重跑安装脚本更新。
+
 ### 3.3 手工丢进技能目录
 
 不用脚本也行：把 `skills/anima-tag-reverse/` 整个拷到 `<用户主目录>/.dsh/skills/` 下，并在技能目录里写一个 `kb-path.json`：
 
 ```json
 { "kbDir": "<词库绝对路径>/anima-tag-kb/画师类" }
+```
+
+姊妹技能手工安装时，则在各自目录里写一个 `engine-path.json`，指向 `anima-tag-reverse` 的安装目录：
+
+```json
+{ "engineDir": "<用户主目录>/.dsh/skills/anima-tag-reverse" }
 ```
 
 ### 3.4 只用知识库（不装技能）
@@ -178,6 +215,11 @@ scripts/build-*.mjs        词库重建流水线（需要自备 data/sources/ �
 # 1) 技能自测：36 条用例
 cd skills/anima-tag-reverse
 node tests/smoke.mjs                      # 预期：36 通过 / 0 失败
+
+# 1b) 姊妹技能自测（各自目录下跑）
+cd ../anima-tag-merge      && node tests/smoke.mjs   # 预期：全部通过：110 项断言
+cd ../anima-tag-character  && node tests/smoke.mjs   # 预期：全部通过：64 项断言
+cd ../anima-tag-reverse
 
 # 2) 词库定位与元信息
 node bin/rtag.mjs --info                  # 预期：打印「词库：…/anima-tag-kb/画师类」+ bigs 69 / subs 711
@@ -288,5 +330,7 @@ Get-FileHash anima-tag-reverse-v1.1.0.zip -Algorithm SHA256   # 与 SHA256SUMS-c
 
 - 技能详细说明（匹配逻辑、评级规则、改动记录）：[`skills/anima-tag-reverse/README.md`](skills/anima-tag-reverse/README.md)
 - 自然语言分支与缺项补全的功能说明：[`skills/anima-tag-reverse/功能说明-自然语言分支与补全.md`](skills/anima-tag-reverse/功能说明-自然语言分支与补全.md)
+- 多图融合（姿势/场景/外观/画风按维度换源）：[`skills/anima-tag-merge/README.md`](skills/anima-tag-merge/README.md)
+- 作品 + 角色 → 精确标签（作品消歧、未命中如实报空）：[`skills/anima-tag-character/README.md`](skills/anima-tag-character/README.md)
 - 词库设计、构建流水线与字段约定：[`anima-tag-kb/README.md`](anima-tag-kb/README.md)
 - 69 个大分类 / 711 个小分类全貌：[`anima-tag-kb/分类树概览.md`](anima-tag-kb/分类树概览.md)
