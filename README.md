@@ -23,6 +23,7 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 - 技能版本 v1.1.0 ｜ 词库构建日 2026-10-06（与 v1.0.0 相同，词库未变）｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
 - 仓库含三个技能：`anima-tag-reverse` v1.1.0、`anima-tag-merge`、`anima-tag-character`（后两者为姊妹技能，复用同一套词库）
+- 发行版本 **v1.2.0**（发布包版本号，与技能版本号是两件事）
 - 环境：**Node.js 18+**（Windows / macOS / Linux 通用），不需要 Python、不需要浏览器插件
 
 > **生成声明**：本仓库的全部内容 —— 技能代码（`bin/`、`src/`、`tests/`、`tools/`）、词库的整理与构建流水线、展览板页面与样式、以及所有文档 —— 均由 AI 生成与完成，没有经过人工逐行审阅与实测，请自行评估后再用于生产。能核实的自动化检查只有 `node tests/smoke.mjs` 的 36 条自测与 `node tests/spec-audit.probe.mjs` 的行为探针，除此之外没有别的测试背书。这条只说明内容是怎么产出的，与第 7 节的授权状态是两件不同的事：本仓库未附开源许可证文件，默认保留所有权利，不因上面这句话而改变。
@@ -41,7 +42,7 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 看到 `red pupils, girl, dress, black dress, church, moonlight, silver hair` 这一行，就说明技能、词库、跨目录定位全都正常。
 
-不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.1.0.zip`（精简档）解压即用，包根目录有一份面向终端用户的 `README.md`。
+不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.2.0.zip`（精简档，3.6 MB）解压即用，包根目录有一份面向终端用户的 `README.md`。需要词库构建原料（`categories/`、`data/`）时改下 `-full` 档（7.9 MB）。
 
 ---
 
@@ -78,10 +79,10 @@ anima-tag-reverse/
 
 | 文件 | 哪来的 |
 |---|---|
-| `anima-tag-kb/tags.json`（15.5 MB 扁平全量标签）、`tags-index.jsonl` | 构建产物，随 Release 的 `-full` 档分发，或跑 `scripts/build-*.mjs` 重建 |
-| `anima-tag-kb/data/`（构建原料、原始 dump、QA 截图） | 构建原料，不入库；原始 dump 不随任何一档分发 |
-| `anima-tag-kb/categories/`（旧 87 类目存档） | 已被 `画师类/` 取代 |
-| `skills/anima-tag-reverse/kb-path.json` | 本机词库指针，由安装脚本在你机器上生成 |
+| `anima-tag-kb/tags.json`（15.5 MB 扁平全量标签）、`tags-index.jsonl` | 构建产物，两个档都带（精简档也含），或跑 `scripts/build-*.mjs` 重建 |
+| `anima-tag-kb/categories/`（旧 87 类目存档） | 已被 `画师类/` 取代，仅随 `-full` 档分发 |
+| `anima-tag-kb/data/`（构建原料、原始 dump、QA 截图） | 构建原料，仅随 `-full` 档分发；原始 dump 不随任何一档分发 |
+| `skills/anima-tag-reverse/kb-path.json`、姊妹技能的 `engine-path.json` | 本机路径指针，由安装脚本在你机器上生成 |
 
 ---
 
@@ -260,8 +261,16 @@ curl -X POST http://127.0.0.1:8100/api/collections \
 # Linux / macOS / Git-Bash
 sha256sum -c SHA256SUMS-core.txt          # 预期：OK
 # Windows PowerShell
-Get-FileHash anima-tag-reverse-v1.1.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
+Get-FileHash anima-tag-reverse-v1.2.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
 ```
+
+`SHA256SUMS-core.txt` 里同时列了 `FILELIST-core.txt` 的哈希。想逐个文件核对包内容，解压后在该目录跑：
+
+```bash
+sha256sum -c FILELIST-core.txt --quiet    # 预期：无输出，180 个文件全部吻合
+```
+
+完整档把上文的 `core` 换成 `full` 即可（`SHA256SUMS-full.txt` / `FILELIST-full.txt`，287 个文件）。
 
 ---
 
