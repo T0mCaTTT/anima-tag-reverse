@@ -155,6 +155,11 @@ export const SCORE = {
   minScore: 0.46,          // 低于此分直接丢
   minSim: 0.52,            // 相似度下限（纯相似度路径）
   topPerClause: 3,         // 每个分句最多留几个候选
+  // 逐字命中（surface/forced/jp/rule）在全局截断时的名额倍数：matchClause 已让它们豁免
+  // perClause 名额，但全局 all.slice(0, top) 原先纯按分数切，会把 R18 图里逐字写出的
+  // sex / penis / censored 这类关键词切掉（实测位次 98–118，top:100 全丢且分级漏判）。
+  // 逐字命中最多保留 top×该倍数条，再回填非逐字命中到 top，既补回关键标签又不炸量。
+  literalTopMult: 2,
   exact: { tag: 1.0, zh: 0.97, alias: 0.93, jp: 0.95, phrase: 0.88 }
 };
 

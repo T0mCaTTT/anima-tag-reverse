@@ -670,6 +670,25 @@ export function matchPlan(plan, lex, opts = {}) {
     (a, b) => b.score - a.score || a.layer - b.layer || b.freqN - a.freqN
   );
 
+  // ---- 逐字命中的全局豁免：与 matchClause 里「逐字命中不受 perClause 名额限制」同一条原则 ----
+  // 踩过的坑：matches 原本一律 all.slice(0, top)，而排序纯按分数。高分标签往往是高频泛词，
+  // 于是用户原话里逐字打出的关键标签被挤出名额 —— R18 图实测：写全了 sex / vaginal / censored /
+  // penis / heavy breathing，位次却在 98–118（全池 148），top:100 直接切掉，分级也随之漏判成 nsfw。
+  // 这些是用原话直接映射出来的标签，不该因为「分数不够高」被砍；上限兜底防止极端输入爆量。
+  const literalAll = all.filter(s => LITERAL_RE.test(s.reason) || s.forced);
+  const keepN = Math.max(top, Math.min(literalAll.length, top * (SCORE.literalTopMult || 2)));
+  const matches = literalAll.length > top
+    ? (() => {
+        const chosen = new Set();
+        const out = [];
+        // 先把逐字命中按原序收进来（最多 keepN 条）
+        for (const s of literalAll) { if (out.length >= keepN) break; out.push(s); chosen.add(s.tag); }
+        // 再用非逐字命中补足到 keepN（保持「默认档规模」不变，不额外膨胀）
+        for (const s of all) { if (out.length >= keepN) break; if (!chosen.has(s.tag)) { out.push(s); chosen.add(s.tag); } }
+        return out.sort((a, b) => b.score - a.score || a.layer - b.layer || b.freqN - a.freqN);
+      })()
+    : all.slice(0, top);
+
   // 备选池：按层归拢本分句里所有够分的候选（含被 perClause 名额挤掉的），
   // 供补全清单（gaps）在同层里挑替代项。只在需要时算，免得默认路径多花时间。
   let alternatives = null;
@@ -706,7 +725,7 @@ export function matchPlan(plan, lex, opts = {}) {
     }
   }
 
-  return { groups, matches: all.slice(0, top), total: all.length, alternatives };
+  return { groups, matches, total: all.length, alternatives };
 }
 
 /** 单条短语直接检索（API/CLI 用），返回按分排序的条目 */
