@@ -38,11 +38,16 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 anima-tag-reverse/
 ├── README.md                     本文件
 ├── NOTICE-third-party.md         第三方数据来源与署名声明（务必读）
-├── skills/anima-tag-reverse/     技能本体：SKILL.md、bin/、src/、tests/、tools/
-│   ├── src/nl.mjs                英文自然语言分支（v1.1.0 新增）
-│   ├── src/gaps.mjs              缺项检测与候选项（v1.1.0 新增）
-│   ├── src/hints.mjs             规则补充层：人数 / 性别 / 中文拆解词表（v1.1.0 新增）
-│   └── 功能说明-自然语言分支与补全.md   自然语言与补全功能的主文档（v1.1.0 新增）
+├── skills/
+│   ├── anima-tag-reverse/        技能本体：SKILL.md、bin/、src/、tests/、tools/
+│   │   ├── src/nl.mjs            英文自然语言分支（v1.1.0 新增）
+│   │   ├── src/gaps.mjs          缺项检测与候选项（v1.1.0 新增）
+│   │   ├── src/hints.mjs         规则补充层：人数 / 性别 / 中文拆解词表（v1.1.0 新增）
+│   │   └── 功能说明-自然语言分支与补全.md   自然语言与补全功能的主文档（v1.1.0 新增）
+│   ├── anima-tag-character/      「作品 + 角色名」→ 规范角色/作品标签（5,713 角色 / 1,098 作品）
+│   ├── anima-tag-merge/          多图融合：按维度把若干图的观察结果拼成一条标签串
+│   ├── anima3-prompt-builder/    按 ANIMA3 v3.1 模板组装完整 prompt + 合规校验
+│   └── ref-tag-retarget/         参考图 tag 模板反推 + 换角色套用 + tag 串体检
 └── anima-tag-kb/                 中文标签知识库
     ├── anima-tag-exhibition.html 展览板页面（数据全在本地）
     ├── viewer/ assets/ vendor/   页面脚本、样式、静态资源、Fuse.js
@@ -53,7 +58,19 @@ anima-tag-reverse/
     └── 设计规范.md               页面与字段的设计约定
 ```
 
-层级是刻意保留的：技能会从「自己所在仓库的根目录」往下找 `anima-tag-kb/画师类`，所以克隆下来就能用，**不需要配任何路径**。
+层级是刻意保留的：技能会从「自己所在仓库的根目录」往下找 `anima-tag-kb/画师类`，乃至同仓库的姊妹技能（如 `ref-tag-retarget` 调用 `anima-tag-character`、`anima3-prompt-builder` 调用 `anima-tag-reverse`），所以克隆下来就能用，**不需要配任何路径**。
+
+### 2.1 五个技能的分工
+
+| 技能 | 一句话 | 典型触发 |
+|---|---|---|
+| `anima-tag-reverse` | 中文描述 / 图像观察 → 单行英文标签串 | 「银发红瞳的少女在教堂前」 |
+| `anima-tag-character` | 作品 + 角色名 → 规范角色标签与作品标签 | 「原神 可莉」「星野（少女与战车）」 |
+| `anima-tag-merge` | 多张图的观察结果按指令融合成一条标签串 | 「图1的姿势换到图2的人身上」 |
+| `anima3-prompt-builder` | 按 ANIMA3 v3.1 模板组装完整 prompt 并自检 | 「给我一条 Anima3 提示词」 |
+| `ref-tag-retarget` | 从参考图反推 tag 模板，再把人物换成任意角色 | 「把这张图的人物换成 XX」 |
+
+后四个技能都**不重复实现标签引擎**：词库索引、分层排序、分级适配等全部复用 `anima-tag-reverse`，共用同一份 `anima-tag-kb`。
 
 **不在本仓库、但发布包里有的文件**（体积大或属于构建原料，见 `.gitignore`）：
 
@@ -63,6 +80,7 @@ anima-tag-reverse/
 | `anima-tag-kb/data/`（构建原料、原始 dump、QA 截图） | 构建原料，不入库；原始 dump 不随任何一档分发 |
 | `anima-tag-kb/categories/`（旧 87 类目存档） | 已被 `画师类/` 取代 |
 | `skills/anima-tag-reverse/kb-path.json` | 本机词库指针，由安装脚本在你机器上生成 |
+| `skills/*/engine-path.json` | 同上，`anima-tag-character` / `anima-tag-merge` 的本机引擎指针 |
 
 ---
 
@@ -288,5 +306,9 @@ Get-FileHash anima-tag-reverse-v1.1.0.zip -Algorithm SHA256   # 与 SHA256SUMS-c
 
 - 技能详细说明（匹配逻辑、评级规则、改动记录）：[`skills/anima-tag-reverse/README.md`](skills/anima-tag-reverse/README.md)
 - 自然语言分支与缺项补全的功能说明：[`skills/anima-tag-reverse/功能说明-自然语言分支与补全.md`](skills/anima-tag-reverse/功能说明-自然语言分支与补全.md)
+- 角色 / 作品标签解析：[`skills/anima-tag-character/README.md`](skills/anima-tag-character/README.md)
+- 多图融合：[`skills/anima-tag-merge/README.md`](skills/anima-tag-merge/README.md)
+- Anima3 模板组装与校验：[`skills/anima3-prompt-builder/SKILL.md`](skills/anima3-prompt-builder/SKILL.md)
+- 参考图 tag 套用与体检：[`skills/ref-tag-retarget/SKILL.md`](skills/ref-tag-retarget/SKILL.md)
 - 词库设计、构建流水线与字段约定：[`anima-tag-kb/README.md`](anima-tag-kb/README.md)
 - 69 个大分类 / 711 个小分类全貌：[`anima-tag-kb/分类树概览.md`](anima-tag-kb/分类树概览.md)

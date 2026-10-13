@@ -1,0 +1,28 @@
+{
+  "subject": { "count": 1, "gender": "girl" },
+  "appearance": {
+    "hair": "silver hair",
+    "hair_style": "twintails",
+    "eyes": "red eyes",
+    "expression": "reading",
+    "body": "slim",
+    "skin": "pale skin"
+  },
+  "outfit": {
+    "dress": "white dress",
+    "legwear": "black thighhighs",
+    "footwear": "barefoot"
+  },
+  "pose": { "action": "sitting", "hands": "holding book", "facing": "profile" },
+  "scene": { "location": "classroom", "time": "night", "props": ["window"] },
+  "style": {
+    "medium": "anime screenshot",
+    "lighting": "soft lighting",
+    "light_direction": "backlighting",
+    "camera": "from side",
+    "framing": "full body",
+    "palette": "cool colors"
+  },
+  "artists": ["@dairi"],
+  "negative": ["glasses"]
+}
