@@ -9,10 +9,10 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 开箱即用：运行时**零第三方依赖**，不用联网，不用 `npm install`（词库搜索用本地打包的 Fuse.js）。
 
-- 技能版本 v1.1.0 ｜ 词库构建日 2026-10-06（与 v1.0.0 相同，词库未变）｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
+- 技能版本 v1.3.0 ｜ 词库构建日 2026-10-06（自 v1.0.0 起词库未变）｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 / 官方组条目 9,645 条
 - 环境：**Node.js 18+**（Windows / macOS / Linux 通用），不需要 Python、不需要浏览器插件
 
-> **生成声明**：本仓库的全部内容 —— 技能代码（`bin/`、`src/`、`tests/`、`tools/`）、词库的整理与构建流水线、展览板页面与样式、以及所有文档 —— 均由 AI 生成与完成，没有经过人工逐行审阅与实测，请自行评估后再用于生产。能核实的自动化检查只有 `node tests/smoke.mjs` 的 36 条自测与 `node tests/spec-audit.probe.mjs` 的行为探针，除此之外没有别的测试背书。这条只说明内容是怎么产出的，与第 7 节的授权状态是两件不同的事：本仓库未附开源许可证文件，默认保留所有权利，不因上面这句话而改变。
+> **生成声明**：本仓库的全部内容 —— 技能代码（`bin/`、`src/`、`tests/`、`tools/`）、词库的整理与构建流水线、展览板页面与样式、以及所有文档 —— 均由 AI 生成与完成，没有经过人工逐行审阅与实测，请自行评估后再用于生产。能核实的自动化检查是各技能目录下的 `node tests/smoke.mjs`（reverse 36 条 / character 64 条 / merge 110 条 / anima3 19 条 / ref-retarget 60 条，合计 289 项断言）与 `node tests/spec-audit.probe.mjs` 的行为探针，除此之外没有别的测试背书。这条只说明内容是怎么产出的，与第 7 节的授权状态是两件不同的事：本仓库未附开源许可证文件，默认保留所有权利，不因上面这句话而改变。
 
 ---
 
@@ -28,7 +28,7 @@ node bin/rtag.mjs "银发红瞳的少女，黑色连衣裙，站在月光下的�
 
 看到 `red pupils, girl, dress, black dress, church, moonlight, silver hair` 这一行，就说明技能、词库、跨目录定位全都正常。
 
-不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.1.0.zip`（精简档）解压即用，包根目录有一份面向终端用户的 `README.md`。
+不想克隆仓库？到 [Releases](https://github.com/T0mCaTTT/anima-tag-reverse/releases) 下载 `anima-tag-reverse-v1.3.0.zip`（精简档）解压即用，包根目录有一份面向终端用户的 `README.md`。
 
 ---
 
@@ -236,7 +236,7 @@ curl -X POST http://127.0.0.1:8100/api/collections \
 # Linux / macOS / Git-Bash
 sha256sum -c SHA256SUMS-core.txt          # 预期：OK
 # Windows PowerShell
-Get-FileHash anima-tag-reverse-v1.1.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
+Get-FileHash anima-tag-reverse-v1.3.0.zip -Algorithm SHA256   # 与 SHA256SUMS-core.txt 比对
 ```
 
 ---
