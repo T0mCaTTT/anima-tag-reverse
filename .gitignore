@@ -18,6 +18,7 @@ anima-tag-kb/tags-index.jsonl
 skills/anima-tag-reverse/kb-path.json
 skills/anima-tag-reverse/obs.json
 skills/anima-tag-reverse/obs7.json
+skills/*/engine-path.json
 anima-tag-kb/启动展览板.cmd - 快捷方式.lnk
 
 # ── 常规 ──

@@ -1,0 +1,10 @@
+{
+  "subject": { "count": 1, "gender": "girl" },
+  "characters": ["可莉", "klee"],
+  "series": ["原神"],
+  "appearance": { "hair": "blonde hair", "hair_style": "twintails", "eyes": "red eyes", "body": "petite" },
+  "outfit": { "dress": "red dress", "legwear": "white thighhighs", "footwear": "boots" },
+  "pose": { "action": "standing", "hands": "holding bag" },
+  "scene": { "location": "town", "time": "day" },
+  "style": { "medium": "anime screenshot", "light_direction": "light source on the left", "framing": "full body", "camera": "eye level" }
+}

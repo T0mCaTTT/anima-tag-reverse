@@ -1,0 +1,24 @@
+{
+  "_说明": "原创角色锚定表。词库没有的角色在这里登记，retarget-template.mjs 会自动读取。",
+  "_格式": {
+    "appearance": "固有外观特征（永远带入）",
+    "outfit": "该角色的标志性服装（仅当原图有衣服时才带入）"
+  },
+
+  "deepseek": {
+    "_desc": "深海鲨鱼主题的蓝发女仆 Vtuber（独立虚拟主播）",
+    "appearance": [
+      "virtual youtuber", "indie virtual youtuber", "1girl",
+      "blue hair", "dark blue hair", "very long hair", "long hair",
+      "hair between eyes", "ahoge", "blue eyes", "glowing eyes",
+      "fins", "cetacean tail", "small breasts", "slim", "pale skin"
+    ],
+    "outfit": [
+      "maid", "maid headdress", "blue dress", "white apron", "maid apron",
+      "waist apron", "frilled apron", "frilled dress", "frills",
+      "blue bow", "blue bowtie", "black bow", "hair bow",
+      "detached sleeves", "puffy sleeves", "frilled sleeves", "long sleeves",
+      "white pantyhose", "pantyhose", "mary janes", "blue shoes"
+    ]
+  }
+}
