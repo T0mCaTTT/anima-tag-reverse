@@ -8,7 +8,7 @@
  * 每个用例给 must（必须命中）与 never（绝不能出现）两组断言。
  * never 里的标签都是历史上真实出现过的误召回，留着当回归护栏。
  */
-import { reverseText, reverseImageSpec, getLexicon, kbInfo, buildNaturalLanguage } from '../src/index.mjs';
+import { reverseText, reverseImageSpec, getLexicon, kbInfo, buildNaturalLanguage, weightForFreq, weightPlan } from '../src/index.mjs';
 import { _internal as M } from '../src/match.mjs';
 
 const { simFast } = M;
@@ -78,12 +78,13 @@ const TEXT_CASES = [
   },
   {
     // 契约①：反推不做内容审查 —— R18 内容照常转换，只把分级 token 写对
-    name: '中文 · R18 不过滤（分级自动升级）',
+    // v2.0.0 起内置回退档表收口成三档，自动升级落点是末档 nsfw（旧名 explicit 只作迁移来源，不再进输出）
+    name: '中文 · R18 不过滤（分级自动升级到末档 nsfw）',
     text: '两个裸体女高中生在床上做爱，露骨，高潮',
     must: ['naked', 'orgasm'],
     never: [],
     lineMust: ['explicit'],
-    rating: 'explicit'
+    rating: 'nsfw'
   },
   {
     name: '中文 · NSFL（猎奇/断肢照常转换）',
@@ -317,8 +318,16 @@ function runCli(args) {
 
 const CLI_CASES = [
   {
-    name: 'CLI · 默认输出仍是单行标签串',
+    // 第 6 期：默认交付形态改成「混合形态」——质量行 + 分层标签行（行尾保留逗号）+ 一句自然语言 + 负向词
+    name: 'CLI · 默认输出是混合形态（分层标签块 + 一句自然语言 + 负向词）',
     args: ['一个女孩站在阳台上'],
+    has: [/^masterpiece, best quality, score_7, safe,$/m, /^1girl, solo,$/m, /^(?:\(balcony:1\.\d\)|balcony),$/m, /^One girl\. /m, /^Negative prompt: /m],
+    never: [/^##/m]
+  },
+  {
+    // 旧形态没被删掉，显式点名才走：--format tags（面板与脚本用的还是这条）
+    name: 'CLI · --format tags 仍是旧的单行标签串',
+    args: ['一个女孩站在阳台上', '--format', 'tags'],
     has: [/^1girl, solo, balcony/],
     never: [/^##/m, /\n/]
   },
@@ -345,6 +354,19 @@ const CLI_CASES = [
     never: [/^One girl\./]
   },
   {
+    // 第 7 期：混合形态默认给冷标签配 Anima 权重（(tag:1.2)），人数与热词保持裸标签
+    name: 'CLI · 混合形态默认配权重',
+    args: ['一个女孩站在阳台上，手里拿着验孕棒'],
+    has: [/^1girl, solo,$/m, /\([^()]+:1\.[123]\)/],
+    never: [/\((?:1girl|solo|girl|2girls|1boy):1\./]
+  },
+  {
+    name: 'CLI · --no-weights 退回全裸标签',
+    args: ['一个女孩站在阳台上，手里拿着验孕棒', '--no-weights'],
+    has: [/^1girl, solo,$/m, /^(?:\(balcony:1\.\d\)|balcony),$/m],
+    never: [/:[1-9]\.[0-9]+\)/]
+  },
+  {
     name: 'CLI · --format json 附带新产物',
     args: ['一个女孩站在阳台上', '--broad', '--nl', '--gaps', '--format', 'json'],
     has: [/"naturalLanguage"/, /"gapsSummary"/, /"alternatives"/]
@@ -363,6 +385,25 @@ for (const c of CLI_CASES) {
   for (const re of c.never || []) if (re.test(out)) bad.push(`多了 ${re}`);
   if (bad.length) { fail++; console.log(`[失败] ${c.name}`); console.log(`   问题： ${bad.join(', ')}`); console.log(`   → ${out.slice(0, 200).replace(/\n/g, '⏎')}`); }
   else { pass++; console.log(`[通过] ${c.name}`); }
+}
+
+// ── 第 7 期：权重档位与权重计划（纯函数，不走 CLI） ──────────────────────
+{
+  const tally = (name, cond) => { if (cond) { pass++; console.log(`[通过] ${name}`); } else { fail++; console.log(`[失败] ${name}`); } };
+  tally('权重档位 · 无 freq 或库外 → 裸标签', weightForFreq(0) === 1 && weightForFreq(undefined) === 1);
+  tally('权重档位 · <1k → 1.3', weightForFreq(1) === 1.3 && weightForFreq(999) === 1.3);
+  tally('权重档位 · 1k–10k → 1.2', weightForFreq(1000) === 1.2 && weightForFreq(9999) === 1.2);
+  tally('权重档位 · 10k–100k → 1.1', weightForFreq(10000) === 1.1 && weightForFreq(99999) === 1.1);
+  tally('权重档位 · ≥100k → 裸标签', weightForFreq(100000) === 1 && weightForFreq(8506969) === 1);
+
+  const fake = { layers: [
+    { tags: [{ tag: '1girl', freqN: 8506969 }, { tag: 'balcony', freqN: 320000 }, { tag: 'holding pregnancy test', freqN: 900 }] },
+    { tags: [{ tag: 'a_tag', freqN: 600 }, { tag: 'b_tag', freqN: 800 }, { tag: 'c_tag', freqN: 9000 }] }
+  ] };
+  const plan = weightPlan(fake);
+  tally('权重计划 · 人数与热词不加权', !plan.has('1girl') && !plan.has('balcony'));
+  tally('权重计划 · 冷词（<1k）拿到 1.3', plan.get('holding pregnancy test') === 1.3);
+  tally('权重计划 · 每层硬顶 2 个（按 freq 由冷到热取）', plan.size === 3 && plan.get('a tag') === 1.3 && plan.get('b tag') === 1.3 && !plan.has('c tag'));
 }
 
 console.log(`\n${pass} 通过 / ${fail} 失败 · ${Date.now() - t0}ms`);

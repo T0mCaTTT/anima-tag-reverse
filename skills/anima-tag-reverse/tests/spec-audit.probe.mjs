@@ -6,18 +6,24 @@
  * 锁六件事：
  *   1. notes 降级为纯日志：结构化输入里 notes 不产分句、不进标签串；只有「整份输入无结构化键」
  *      的兼容分支才把整段当文本读（旧行为）。
- *   2. 图像分支默认带自审：reverseImageSpec(spec) 这个空 opts 调用必须给出 gaps/gapsSummary/
- *      gapsMarkdown，缺项里必须有 C-spec-* 观察缺项；{gaps:false} 能关；且默认档**窄召回**
- *      （不传 broad 时逐字节等于 {broad:false}），宽召回只有显式 {broad:true} / --broad 才走。
+ *   2. 两个入口默认带自审：reverseImageSpec(spec) / reverseText(text) 的空 opts 调用必须给出
+ *      gaps/gapsSummary/gapsMarkdown，图像侧缺项里必须有 C-spec-* 观察缺项；{gaps:false} 能关；
+ *      且默认档**窄召回**（不传 broad 时逐字节等于 {broad:false}），宽召回只有显式 {broad:true} / --broad 才走。
  *   3. 必填观察维度缺失即报警：analyzeImageSpec 对每个维度给 {key,label,severity,advice}，
  *      buildGaps 必须把它变成缺口并计入 gapsSummary.specMissing，且带可照抄的建议写法。
  *   4. 键名别名归一：lights / lighting_direction / framing / shot / artstyle / artist / body_type
  *      要落到规范键路径上，且落对层。
- *   5. 不受影响的既有契约：reverseText 默认输出与改造前逐字节一致；imageSpec 入口空 opts 的
- *      标签串不受 gaps 影响（只多挂字段），且默认档（窄召回）与改造前同规模，不含宽召回独有标签。
+ *   5. 不受影响的既有契约：reverseText 默认**标签串**与改造前逐字节一致（自审默认开、只多挂字段）；
+ *      imageSpec 入口空 opts 的标签串不受 gaps 影响，且默认档（窄召回）与改造前同规模，不含宽召回独有标签；
+ *      标签条数默认**不封顶**（旧 CLI 默认 40 / 旧 API 默认 60 都在分层前切过一刀，现已去掉，只有显式 --top N 才截断）——
+ *      CLI 长输入走 stdin 时默认档与 `--top 1000` 逐字节一致且 > 40 条、`--top 10` 仍真封顶，API 侧 used 同口径。
  *   6. 归档真值严格等值：2026-10-07 16:35 归档的两份探针记录（23 条，去重后 22 条）逐条钉死，
- *      除 5 条已在文档里记名的既有偏差（M1 规则层补录，A2 不修）外一律逐字节相等 —— 这是给
- *      「变胖标签」这类「多出标签」型回归配的网（must/never 口径抓不住它）。
+ *      17 条逐字节相等，除 5 条已在文档里记名的既有偏差外一律逐字节相等 ——
+ *      其中 4 条是 M1（规则层补录，A2 不修，属产品决定），1 条是 M2（第 6 期把外部模板的标签
+ *      并进主词库后，`schoolgirl` 由「近似到 school」变成命中同名词条本身）——
+ *      这是给「变胖标签」这类「多出标签」型回归配的网（must/never 口径抓不住它）。
+ *      归档里的第 5 条偏差（旧档名 `--rating explicit`）在 v2.0.0 起硬报错、真值不可复现，
+ *      已改为钉 v2 契约：迁移写法 `--rating nsfw --no-tier-token` 的 prompt 档逐字节相等。
  *
  * 打印以 [通过]/[失败] 逐条给出，末尾一行汇总；失败时退出码 1。
  */
@@ -45,12 +51,14 @@ const IMAGE_NARROW_BASELINE = '1girl, solo, red eyes, twintails, profile, sidewa
 /**
  * P5（默认档收回窄召回）之后新增的契约常量：
  *   - 只有宽召回才捞得到的标签：默认档一个都不许出现，显式 --broad / {broad:true} 必须全有；
- *   - 样张的两档实测条数（CLI 口径，含默认开启的 alternatives）：默认窄召回 33 条、--broad 38 条。
+ *   - 样张的两档实测条数（CLI 口径，含默认开启的 alternatives）：默认窄召回 33 条、--broad 41 条。
  *     A2 之前窄召回是 34 条，少掉的正是 `sideways mouth`（变体压制恢复后的预期代价）。
+ *     宽召回那条在「去掉条数封顶」之前是 38 条 —— 那是旧 CLI 默认 `top: 40` 在分层**之前**切掉的，
+ *     41 才是真值（API 一直报 41，两边现在同口径）。
  */
 const BROAD_ONLY = ['braided twintails', 'short twintails', 'twintails with braided base', 'full-length mirror'];
 const SAMPLE_NARROW_COUNT = 33;
-const SAMPLE_BROAD_COUNT = 38;
+const SAMPLE_BROAD_COUNT = 41;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -119,10 +127,17 @@ section('2 · 图像分支默认带缺项自审');
   ok('reverse({imageSpec}) 不额外加默认（保持既有行为）', viaReverse.gaps === undefined);
 
   const text = reverseText('银发少女在教室里读书', {});
-  ok('文本分支空 opts 不带 gaps', text.gaps === undefined && text.plan.specIssues === undefined);
+  // 契约变更（gaps 稳定产出那一轮）：文本入口与图像入口对齐，空 opts 就带自审；
+  // plan 的键集合仍与改造前逐字一致（自审只往结果对象上挂字段，不动 plan、不动标签串）。
+  ok('文本分支空 opts 现在带 gaps（与图像入口一致）',
+    Array.isArray(text.gaps) && !!text.gapsSummary && typeof text.gapsMarkdown === 'string' && text.plan.specIssues === undefined);
   ok('文本分支 plan 键集合与改造前逐字一致', Object.keys(text.plan).join(',') === 'clauses,negated', Object.keys(text.plan).join(','));
   ok('图像分支 plan 才有 notesText / specIssues', Object.keys(out.plan).join(',') === 'clauses,negated,notesText,specIssues', Object.keys(out.plan).join(','));
-  ok('文本分支空 opts 不带 broad 产物', text.alternatives === undefined);
+  const textOff = reverseText('银发少女在教室里读书', { gaps: false });
+  ok('文本分支 {gaps:false} 能关掉默认自审',
+    textOff.gaps === undefined && textOff.gapsSummary === undefined && textOff.gapsMarkdown === undefined);
+  ok('默认自审不改文本标签串（逐字节）', text.bare === textOff.bare, `${textOff.bare.split(', ').length} 条`);
+  ok('文本分支空 opts 仍不带 alternatives（API 侧只默认 gaps，与图像入口同一条线）', text.alternatives === undefined);
   const textGaps = reverseText('银发少女在教室里读书', { gaps: true, alternatives: true, broad: true });
   ok('文本分支显式 gaps 仍然可用', Array.isArray(textGaps.gaps) && textGaps.gaps.length > 0, `${textGaps.gaps.length} 条`);
 }
@@ -343,15 +358,16 @@ section('5 · 既有契约不变');
     /光位|背光/.test(cliTpl.style.light_direction) && /景别|全身/.test(cliTpl.style.framing),
     cliTpl.style.light_direction);
 
-  const cliTags = run(['--image-spec', path.join(HERE, 'img-spec.sample.json')]);
+  // 第 6 期起 CLI 默认输出是混合形态；本段钉的是「标签串」本身，所以显式写 --format tags。
+  const cliTags = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--format', 'tags']);
   ok('CLI 图像入口 stdout 仍是单行纯标签串', cliTags.trim().split('\n').length === 1 && !/\[缺项自审\]/.test(cliTags), cliTags.trim().slice(0, 60) + ' …');
   // P5：默认档收回窄召回——默认 stdout 必须与显式 --no-broad 相同，且不含只有宽召回才有的标签
-  const cliNoBroad = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--no-broad']);
+  const cliNoBroad = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--no-broad', '--format', 'tags']);
   ok('CLI 默认档 == 显式 --no-broad（逐字节）', cliTags.trim() === cliNoBroad.trim(), cliTags.trim().slice(0, 60) + ' …');
   ok('CLI 默认档标签条数与窄召回实测一致', cliTags.trim().split(', ').length === SAMPLE_NARROW_COUNT, `${cliTags.trim().split(', ').length} 条`);
   ok('CLI 默认档不再出现宽召回独有的标签', BROAD_ONLY.every(t => !cliTags.includes(t)), BROAD_ONLY.filter(t => cliTags.includes(t)).join(', ') || '无');
-  const cliBroad = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--broad']);
-  ok('CLI --broad 仍能取到宽召回那版（实测 38 条且含 4 条独有）',
+  const cliBroad = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--broad', '--format', 'tags']);
+  ok('CLI --broad 仍能取到宽召回那版（实测 41 条且含 4 条独有）',
     cliBroad.trim().split(', ').length === SAMPLE_BROAD_COUNT && BROAD_ONLY.every(t => cliBroad.includes(t)),
     `${cliBroad.trim().split(', ').length} 条 · 独有 ${BROAD_ONLY.filter(t => cliBroad.includes(t)).length}/4`);
   const cliMd = run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--format', 'md']);
@@ -366,7 +382,7 @@ section('5 · 既有契约不变');
   const r2off = run2(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--gaps', '--no-broad']);
   ok('显式 --gaps 时仍打提示', /\[缺项自审\]/.test(r2off.stderr));
 
-  const r2no = run2(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--no-gaps']);
+  const r2no = run2(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--no-gaps', '--format', 'tags']);
   ok('--no-gaps 关掉图像入口的缺项提示（stderr 干净）', r2no.stderr.trim() === '' && !/缺项自审/.test(r2no.stderr));
   ok('--no-gaps 后 stdout 仍是同样的单行标签串', r2no.stdout.trim() === cliTags.trim(), r2no.stdout.trim().slice(0, 50) + ' …');
   const jsonNo = JSON.parse(run(['--image-spec', path.join(HERE, 'img-spec.sample.json'), '--no-gaps', '--format', 'json']));
@@ -378,6 +394,31 @@ section('5 · 既有契约不变');
   ok('CLI 文本入口默认输出仍是单行标签串', textCli.trim().split('\n').length === 1, textCli.trim().slice(0, 60) + ' …');
   const r2text = run2(['长发蓝发少女在教室里读书', '--format', 'tags']);
   ok('CLI 文本入口不打缺项提示（默认档未变）', r2text.stderr.trim() === '' && !/缺项自审/.test(r2text.stderr));
+  const textCliJson = JSON.parse(run(['长发蓝发少女在教室里读书', '--format', 'json']));
+  ok('CLI 文本入口 --format json 默认带 gaps 三件套',
+    !!textCliJson.gaps && !!textCliJson.gapsSummary && !!textCliJson.gapsMarkdown);
+  const textCliJsonOff = JSON.parse(run(['长发蓝发少女在教室里读书', '--format', 'json', '--no-gaps']));
+  ok('CLI 文本入口 --no-gaps 后 json 里没有 gaps 键',
+    textCliJsonOff.gaps === undefined && textCliJsonOff.gapsSummary === undefined);
+
+  // 契约变更（去掉封顶那一轮）：标签条数默认不封顶。旧 CLI 默认 `top: 40`、旧 API 默认 `top || 60`
+  // 都在**分层之前**先切一刀，砍掉全局分数最低的那几条 —— 只有显式 `--top N` / `{top:N}` 才截断。
+  // 长输入走 stdin（`-`）：Windows 命令行会把中文 argv 搅了，stdin 没这个问题。
+  const FAT = '银发少女, 蓝色眼睛, 微笑着, 马尾辫, 白色水手服, 黑色百褶裙, 过膝袜, 短发男孩, 透明的伞, 雨中的街道, 湿漉漉的地面, 夜晚, 霓虹灯, 逆光, 从下方仰视, 全身, 背影, 回头, 手放在胸前, 戴着眼镜, 耳环, 项链, 教室, 黑板, 窗户, 樱花飘落, 秋天, 黄昏, 教堂, 蜡烛, 阴影很重, 电影感构图, 特写, 俯视, 猫在旁边, 蝴蝶, 绷带, 和服, 手里握着刀, 空中的鸟, 天使的翅膀, 恶魔的角, 机械手臂, 护目镜, 围巾, 耳麦, 手套, 腰带, 皮靴, 斗篷, 皇冠, 项圈, 锁骨, 泳装, 沙滩, 海底, 宇宙, 星空, 满月, 暴风雪, 火焰, 雷电, 魔法阵, 血渍, 眼泪, 单眼, 双马尾, 丸子头, 呆毛, 发饰, 蝴蝶结, 蕾丝, 高跟鞋, 长筒靴';
+  const cliRun = (args, input) => execFileSync(process.execPath, [path.join(ROOT, 'bin', 'rtag.mjs'), ...args], { cwd: ROOT, encoding: 'utf8', input });
+  const fatDefault = cliRun(['-', '--format', 'tags'], FAT).trim();
+  const fatTop = cliRun(['-', '--format', 'tags', '--top', '1000'], FAT).trim();
+  ok('CLI 默认输出不封顶：默认 == --top 1000（逐字节）且 > 40 条',
+    fatDefault === fatTop && fatDefault.split(', ').length > 40, `${fatDefault.split(', ').length} 条`);
+  const fatTop10 = cliRun(['-', '--format', 'tags', '--top', '10'], FAT).trim();
+  ok('显式 --top 10 仍然真的封顶', fatTop10.split(', ').length === 10, `${fatTop10.split(', ').length} 条`);
+  const apiDefault = reverseText(FAT, {}).json.stats;
+  const apiTop = reverseText(FAT, { top: 1000 }).json.stats;
+  ok('API 默认同样不封顶：默认 used == {top:1000} 的 used（且 > 40）',
+    apiDefault.used === apiTop.used && apiDefault.used > 40,
+    `total ${apiDefault.total} / used ${apiDefault.used} vs ${apiTop.used}`);
+  const perf = (() => { const t = Date.now(); reverseText(FAT, {}); return Date.now() - t; })();
+  ok('默认自审没有把单次调用拖成秒级（< 3000ms）', perf < 3000, `${perf}ms`);
 }
 
 // ------------------------------------- 6. 归档真值（2026-10-07 16:35）严格等值
@@ -390,7 +431,8 @@ section('6 · 归档真值（16:35）严格等值');
   // 结构上抓不住多出来的标签；spec-audit 是行为探针，已有等值基线（TEXT_BASELINE / IMAGE_NARROW_BASELINE）
   // 与 CLI 双流助手，且 smoke 的「36 例」被文档与审查探针交叉引用，不宜挪动。
   // 口径：没有 drift 的行必须与归档逐字节相等；有 drift 的行是**已记名**的既有偏差（M1：规则层 hints
-  // 补录带来的固定偏差，A2 不修，属产品决定），此时把「多出/少掉」两个集合也钉死 —— 偏差一旦扩大，
+  // 补录带来的固定偏差，A2 不修，属产品决定；M2：第 6 期并把外部模板标签进主词库后，短词条命中了同名标签
+  // 而不是近似标签），此时把「多出/少掉」两个集合也钉死 —— 偏差一旦扩大，
   // 或哪天被修好，这两条断言都会红，不会被静默掩盖。
   const RUN = args => execFileSync(process.execPath, [path.join(ROOT, 'bin', 'rtag.mjs'), ...args], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const strip = s => s.replace(/\r\n/g, '\n').replace(/\n+$/, '');
@@ -399,7 +441,9 @@ section('6 · 归档真值（16:35）严格等值');
   // 22 条各写一条字面的断言调用，不写成循环：文档里写的「N 例」与审查探针的口径都按本文件的断言调用
   // 位点数计（凡出现「ok 左括号」的地方都被数进去，注释里也算），循环会让「位点数」与「执行条数」对不上
   // —— 22 条真值表写成循环时位点数会少 20，文档数字就会与实际不符。
-  const A = args => strip(RUN(args));
+  // 第 6 期起 CLI 默认是混合形态；归档真值钉的是「标签串」，所以这里统一补 --format tags
+  // （已经自带 --format / --search 的行不动：那两行钉的是 prompt 档与检索输出）。
+  const A = args => strip(RUN(args.some(a => a === '--format' || a === '--search') ? args : [...args, '--format', 'tags']));
   let runs = 0, strictRuns = 0, driftRuns = 0;
   const pin = ({ name, args, expect, drift }) => {
     runs++;
@@ -413,7 +457,8 @@ section('6 · 归档真值（16:35）严格等值');
     const added = tags(now).filter(t => !tags(expect).includes(t));
     const removed = tags(expect).filter(t => !tags(now).includes(t));
     const pinned = JSON.stringify(added) === JSON.stringify(drift.added) && JSON.stringify(removed) === JSON.stringify(drift.removed);
-    return [`归档真值：${name}（已知偏差 M1，差异已钉住）`, pinned,
+    const tag = drift.tag || 'M1';
+    return [`归档真值：${name}（已知偏差 ${tag}，差异已钉住）`, pinned,
       pinned ? `${now} ｜ 真值 ${expect}` : `多出 ${JSON.stringify(added)} / 少掉 ${JSON.stringify(removed)} · 现 ${now}`];
   };
 
@@ -423,7 +468,12 @@ section('6 · 归档真值（16:35）严格等值');
   ok(...pin({ name: '和服', args: ['和服'], expect: 'kimono' }));
   ok(...pin({ name: '2girls', args: ['2girls'], expect: '2girls' }));
   ok(...pin({ name: 'women', args: ['women'], expect: '' }));
-  ok(...pin({ name: 'schoolgirl', args: ['schoolgirl'], expect: 'school' }));
+  // 第 6 期并库（外部模板 ANIMA3 的标签进主表）后，主表里有了同名的 `schoolgirl`，
+  // 这条从「近似到 school」变成命中词条本身 —— 记名偏差 M2，差异集合一并钉死。
+  ok(...pin({
+    name: 'schoolgirl', args: ['schoolgirl'], expect: 'school',
+    drift: { tag: 'M2', added: ['schoolgirl'], removed: ['school'] }
+  }));
   ok(...pin({ name: '微笑', args: ['微笑'], expect: 'smile' }));
   ok(...pin({ name: '高潮', args: ['高潮'], expect: 'nsfw, orgasm' }));
   ok(...pin({ name: '低角度仰拍', args: ['低角度仰拍'], expect: 'low horns, from below' }));
@@ -443,9 +493,14 @@ section('6 · 归档真值（16:35）严格等值');
     name: '低角度仰拍，霓虹街区，雨夜', args: ['低角度仰拍，霓虹街区，雨夜'], expect: 'low horns, from below, rain',
     drift: { added: ['neon lights'], removed: [] }
   }));
+  // v1.1.0 归档真值这条原本是 `--rating explicit --format prompt 一个女孩`（真值 `masterpiece, best quality,
+  // score_7, explicit, 1girl`，记名偏差 added ['solo','girl']）。v2.0.0 起旧档名 `explicit` 硬报错 exit 1，
+  // 那条命令再也产不出标签串，真值不可复现 —— 于是本行改为钉 v2 契约：迁移后的写法（末档 + `--no-tier-token`，
+  // 也就是面板的调用姿势）必须逐字节等于下面这串，档名不出现在交付串里。
   ok(...pin({
-    name: '--rating explicit --format prompt 一个女孩', args: ['--rating', 'explicit', '--format', 'prompt', '一个女孩'],
-    expect: 'masterpiece, best quality, score_7, explicit, 1girl', drift: { added: ['solo', 'girl'], removed: [] }
+    name: '--rating nsfw --no-tier-token --format prompt 一个女孩（v2 取代旧名 explicit 的归档行）',
+    args: ['--rating', 'nsfw', '--no-tier-token', '--format', 'prompt', '一个女孩'],
+    expect: 'masterpiece, best quality, score_7, 1girl, solo, girl'
   }));
   ok(...pin({
     name: '--search "blue eyes"', args: ['--search', 'blue eyes'],

@@ -250,6 +250,41 @@ function freqScore(freqN, maxFreq) {
  * 给一个分句算分
  * @returns {Array} 候选数组（未排序裁剪）
  */
+/**
+ * 第 6 期「细分再试」：整句太长时，把紧排串切成词库认得的小段。
+ * 只保留词库认得的段（整段表面命中，或它的 1/2-gram 词元在词元表里），每个起点取最长的那段。
+ * 实测用例：「她手里捏着一枚铜制怀表」整句对不上词库的「拿着怀表」（surface 索引里只有「拿着怀表」），
+ * 切成「怀表」这一小段就能召回 holding pocket watch。
+ */
+const SPLIT_MIN = 2;         // 小段最短 2 字
+const SPLIT_MAX = 6;         // 小段最长 6 字（再长就不是「细分」了）
+const SPLIT_LIMIT = 12;      // 每个分句最多试几段（控耗时）
+const SPLIT_PENALTY = 0.9;   // 细分命中打九折，保证不压过整句正常命中
+
+/** 细分命中允许被剥掉的动作前缀（词库写「拿着怀表」，用户写「捏着一枚铜制怀表」） */
+const SPLIT_VERB_PREFIX = Object.freeze(['拿着', '握着', '捧着', '捏着', '拎着', '抱着', '托着', '举着', '戴着', '叼着', '夹着', '攥着', '牵着', '端着', '带着', '佩着', '挂着', '系着', '穿着', '套着', '含在', '咬住', '叼住', '手握', '手拿', '手中', '手里']);
+/** 细分命中允许被剥掉的物件后缀（词库写「怀表吊坠」，用户写「怀表」） */
+const SPLIT_NOUN_SUFFIX = Object.freeze(['吊坠', '饰品', '挂件', '装饰', '配件']);
+
+function splitSpans(clause, lex) {
+  const s = clause.compact || '';
+  const out = [];
+  const seenSeg = new Set();
+  for (let i = 0; i < s.length; i++) {
+    const maxLen = Math.min(SPLIT_MAX, s.length - i);
+    for (let len = maxLen; len >= SPLIT_MIN; len--) {
+      const seg = s.slice(i, i + len);
+      if (seenSeg.has(seg)) continue;
+      const known = lex.surfaces.has(seg) || lex.tokens.has('2:' + seg) || lex.tokens.has('1:' + seg);
+      if (!known) continue;
+      seenSeg.add(seg);
+      out.push(seg);
+      break;                                  // 同一位置只取最长的那一段
+    }
+  }
+  return out.slice(0, SPLIT_LIMIT);
+}
+
 function matchClause(clause, lex, opts = {}) {
   const B = opts.broad ? BROAD : null;
   const perClause = opts.perClause || (B ? B.topPerClause : SCORE.topPerClause);
@@ -404,6 +439,7 @@ function matchClause(clause, lex, opts = {}) {
       i, tag: e.tag, zh: e.zh, zhCore: e.zhCore, big: e.big, bigName: e.bigName, sub: e.sub, slot: e.slot,
       layer: e.layer, layerName: LAYER_NAME[e.layer] || '其他',
       freqN: e.freqN, freqStr: e.freqStr, conf: e.conf, official: !!e.official,
+      need: e.need || null,          // 词库行自带的档位门（ANIMA3 合并行的 anima3:mid|top），没有就是 null
       score: Math.round(Math.min(1, score) * 1000) / 1000,
       sim: Math.round(c.sim * 1000) / 1000,
       via: c.via, reason: c.reason, forced: !!c.forced
@@ -411,6 +447,11 @@ function matchClause(clause, lex, opts = {}) {
   }
 
   scored.sort((a, b) => b.score - a.score || b.freqN - a.freqN);
+
+  // 第 6 期：留一份「打完分、还没过滤」的快照。用户原话里本来有词库对应的候选，
+  // 只是分数不够 / 被泛词、同表、同核、变体压制而落选的那些，要能在输出层被找回来
+  // （转成人话，不静默消失）。快照只用于事后汇报，不参与任何判定。
+  const allScored = scored.slice();
 
   // ---- 泛词压制：用户话里已经逐字命中的通用标签，不该再带上围着它转的更具体的标签 ----
   // 「微笑」已经给了 smile，就别再给「邪恶微笑 / 淡淡微笑」；「school uniform」同理
@@ -461,7 +502,7 @@ function matchClause(clause, lex, opts = {}) {
         if (owner) {
           s.score = Math.round(s.score * 0.5 * 1000) / 1000;
           s.genericOf = owner;
-          if (s.score < minScore) { s.dropped = true; dropped++; }
+          if (s.score < minScore) { s.dropped = true; s.dropReason = s.dropReason || 'generic-suppressed'; dropped++; }
         }
       }
       if (dropped) scored = scored.filter(s => !s.dropped);
@@ -499,7 +540,7 @@ function matchClause(clause, lex, opts = {}) {
         const s = arr[k];
         s.score = Math.round(s.score * 0.55 * 1000) / 1000;
         s.sameSurface = arr[0].tag;
-        if (s.score < minScore) { s.dropped = true; dropped++; }
+        if (s.score < minScore) { s.dropped = true; s.dropReason = s.dropReason || 'same-surface-loser'; dropped++; }
       }
     }
     if (dropped) scored = scored.filter(s => !s.dropped);
@@ -523,7 +564,7 @@ function matchClause(clause, lex, opts = {}) {
         if (s === winner || s.forced) continue;
         s.score = Math.round(s.score * 0.55 * 1000) / 1000;
         s.sameCore = winner.tag;
-        if (s.score < minScore) { s.dropped = true; coreDropped++; }
+        if (s.score < minScore) { s.dropped = true; s.dropReason = s.dropReason || 'same-core-loser'; coreDropped++; }
       }
       if (arr.length > 1 && (!winner.score || winner.score < minScore)) { /* 保底：winner 自己在后续门槛处理 */ }
       void zk;
@@ -547,6 +588,7 @@ function matchClause(clause, lex, opts = {}) {
         s.score = Math.round(s.score * 0.55 * 1000) / 1000;
         s.variantOf = s.via;
         s.dropped = s.score < minScore;      // 降权后够不到门槛的，直接不要
+        if (s.dropped) s.dropReason = s.dropReason || 'variant-suppressed';
       }
     }
     scored = scored.filter(s => !s.dropped);
@@ -606,7 +648,7 @@ function matchClause(clause, lex, opts = {}) {
       const idx = clause.compact.indexOf(v);
       if (idx < 0) continue;
       const by = covered(clause.compact, v, idx);
-      if (by) { s.dropped = true; s.charCoveredBy = by; dropped++; }
+      if (by) { s.dropped = true; s.charCoveredBy = by; s.dropReason = s.dropReason || 'covered-by-longer'; dropped++; }
     }
     if (dropped) {
       scored = scored.filter(s => !s.dropped);
@@ -615,6 +657,55 @@ function matchClause(clause, lex, opts = {}) {
   }
 
   
+  // ---- D. 细分再试（第 6 期）----
+  // 整句太长、逐字表面接不住时（「她手里捏着一枚铜制怀表」对不上词库里的「拿着怀表」），
+  // 把分句切成词库认得的小段，逐段再跑一次本函数（带惩罚），把够分的补进来。
+  // 只在「这一句一条都没过门槛」时触发，正常分句完全不受影响。
+  if (!opts.noSplit && !scored.some(s => s.score >= minScore || s.forced)) {
+    const rescued = [];
+    const seenTag = new Set();
+    // 细分命中的准入：这条标签的中文释义里必须**真的含有**这个片段，而且只多出
+    // 「拿着 / 握着 / 捏着…」这类动作前缀（词库把「怀表」写成「拿着怀表」）或
+    // 「吊坠 / 饰品」这类物件后缀（词库把「怀表」写成「怀表吊坠」）。
+    // 为什么非卡这么死：只按相似度放开的话，「手里」会召回 shuriken（手里剑）、
+    // 「手里捏」会召回 double handjob、「旁边」会召回 looking to the side ——
+    // 这些碎片命中不但没用，还会把分级 token 顶成 nsfw（实测踩到）。
+    const accept = (m, sp) => {
+      for (const z of [m.zhCore, m.zh]) {
+        const zz = String(z || '').replace(/\s+/g, '').split(/[（(]/)[0];
+        if (!zz || !sp) continue;
+        const pos = zz.indexOf(sp);
+        if (pos < 0) continue;
+        const left = zz.slice(0, pos);
+        const right = zz.slice(pos + sp.length);
+        if (left.length + right.length > 4) continue;
+        if (!left && !right) return true;                          // 释义里就是这个词
+        if (left && !right && SPLIT_VERB_PREFIX.includes(left)) return true;   // 拿着怀表
+        if (!left && right && SPLIT_NOUN_SUFFIX.includes(right)) return true;  // 怀表吊坠
+      }
+      return false;
+    };
+    for (const sp of splitSpans(clause, lex)) {
+      let got = [];
+      try { got = matchClause(parsePhrase(sp), lex, { ...opts, noSplit: true, pool: undefined, perClause: 4 }); } catch { got = []; }
+      for (const m of got) {
+        if (seenTag.has(m.tag)) continue;
+        if (!accept(m, sp)) continue;
+        seenTag.add(m.tag);
+        m.score = Math.round(m.score * SPLIT_PENALTY * 1000) / 1000;
+        m.via = sp;
+        m.reason = 'split:' + (m.reason || 'sim');
+        m.splitFrom = clause.compact;
+        rescued.push(m);
+      }
+    }
+    if (rescued.length) {
+      dbg('split-rescue', JSON.stringify({ clause: clause.compact, spans: splitSpans(clause, lex), got: rescued.map(m => `${m.tag}:${m.score}`) }));
+      scored = scored.concat(rescued).sort((a, b) => b.score - a.score || b.freqN - a.freqN);
+      for (const m of rescued) allScored.push(m);   // 让它们落选时也能被「没接住」清单报出来
+    }
+  }
+
   // 逐字命中（surface / forced / jp 桥接 / rule 规则词条）是用户原话的直接映射，保证进结果：
   // 规则层与召回层很容易在一个分句里凑出好几条高分标签，把 perClause 名额占满，
   // 于是「银发」这种明明逐字命中的词反而被切掉（回归用例「樱花树下的白裙」的失败原因）。
@@ -624,7 +715,7 @@ function matchClause(clause, lex, opts = {}) {
   const seen = new Set();
   let weakKept = 0;
   for (const s of scored) {
-    if (!(s.score >= minScore || s.forced)) continue;      // 门槛：原本就够不到的不留
+    if (!(s.score >= minScore || s.forced)) { s.dropped = true; s.dropReason = s.dropReason || 'below-min-score'; continue; }   // 门槛：原本就够不到的不留
     const literal = LITERAL_RE.test(s.reason);
     if (opts.pool) opts.pool.push(s);                      // 备选池：够分但可能被名额挤掉的都在这里
     if (!literal) {
@@ -636,6 +727,18 @@ function matchClause(clause, lex, opts = {}) {
     kept.push(s);
   }
   dbg('kept', JSON.stringify(kept.map(s => `${s.tag}:${s.score}`)));
+  // 第 6 期：把「落选的候选」按分句回传（整数化字段，供上层转成人话）。
+  // 只挂在数组属性上，JSON.stringify / 遍历都看不见它，默认行为逐字节不变。
+  const droppedList = allScored
+    .filter(s => s.dropped)
+    .sort((a, b) => b.score - a.score)
+    .map(s => ({
+      tag: s.tag, zh: s.zh || '', score: s.score, via: s.via || '',
+      layer: s.layer, layerName: s.layerName, freqStr: s.freqStr,
+      why: s.dropReason || 'filtered'
+    }));
+  if (droppedList.length) kept.dropped = droppedList;
+  dbg('dropped', JSON.stringify(droppedList.map(s => `${s.tag}:${s.score}:${s.why}`)));
   return kept;
 }
 
@@ -643,10 +746,12 @@ function matchClause(clause, lex, opts = {}) {
  * 匹配整个计划（parseText 的输出）
  * @param {object} plan parseText / parseImageSpec 的结果
  * @param {object} lex  buildLexicon 的结果
- * @param {object} opts { top, minScore, perClause, broad, alternatives }
+ * @param {object} opts { top, minScore, perClause, broad, alternatives }；top 不传 = 不截断
  */
 export function matchPlan(plan, lex, opts = {}) {
-  const top = opts.top || 60;
+  // 不传 top 就不截断（原来写死 60）：这一刀砍在分层之前，砍掉的是「全局分数最低的那几条」，
+  // 表现为「标签莫名变少」，很容易被误判成词库不够。要封顶请显式传 top / --top N。
+  const top = opts.top || Infinity;
   const groups = [];
   const flat = new Map();     // tag → match（跨分句去重，留最高分）
 
@@ -654,7 +759,7 @@ export function matchPlan(plan, lex, opts = {}) {
     const pool = opts.alternatives ? [] : null;
     const list = matchClause(clause, lex, pool ? { ...opts, pool } : opts);
     if (DBG) console.log('[rtag] clause', ci, 'norm', JSON.stringify(clause.norm), 'forced', JSON.stringify(clause.forced || []), '→', JSON.stringify(list.map(m => m.tag)));
-    groups.push({ clause: clause.norm || clause.text, layerHint: clause.layerHint, matches: list, pool });
+    groups.push({ clause: clause.norm || clause.text, layerHint: clause.layerHint, matches: list, pool, dropped: list.dropped || [] });
     for (const m of list) {
       const prev = flat.get(m.tag);
       if (!prev) flat.set(m.tag, { ...m, clauses: [ci] });
@@ -669,25 +774,6 @@ export function matchPlan(plan, lex, opts = {}) {
   const all = [...flat.values()].sort(
     (a, b) => b.score - a.score || a.layer - b.layer || b.freqN - a.freqN
   );
-
-  // ---- 逐字命中的全局豁免：与 matchClause 里「逐字命中不受 perClause 名额限制」同一条原则 ----
-  // 踩过的坑：matches 原本一律 all.slice(0, top)，而排序纯按分数。高分标签往往是高频泛词，
-  // 于是用户原话里逐字打出的关键标签被挤出名额 —— R18 图实测：写全了 sex / vaginal / censored /
-  // penis / heavy breathing，位次却在 98–118（全池 148），top:100 直接切掉，分级也随之漏判成 nsfw。
-  // 这些是用原话直接映射出来的标签，不该因为「分数不够高」被砍；上限兜底防止极端输入爆量。
-  const literalAll = all.filter(s => LITERAL_RE.test(s.reason) || s.forced);
-  const keepN = Math.max(top, Math.min(literalAll.length, top * (SCORE.literalTopMult || 2)));
-  const matches = literalAll.length > top
-    ? (() => {
-        const chosen = new Set();
-        const out = [];
-        // 先把逐字命中按原序收进来（最多 keepN 条）
-        for (const s of literalAll) { if (out.length >= keepN) break; out.push(s); chosen.add(s.tag); }
-        // 再用非逐字命中补足到 keepN（保持「默认档规模」不变，不额外膨胀）
-        for (const s of all) { if (out.length >= keepN) break; if (!chosen.has(s.tag)) { out.push(s); chosen.add(s.tag); } }
-        return out.sort((a, b) => b.score - a.score || a.layer - b.layer || b.freqN - a.freqN);
-      })()
-    : all.slice(0, top);
 
   // 备选池：按层归拢本分句里所有够分的候选（含被 perClause 名额挤掉的），
   // 供补全清单（gaps）在同层里挑替代项。只在需要时算，免得默认路径多花时间。
@@ -725,7 +811,7 @@ export function matchPlan(plan, lex, opts = {}) {
     }
   }
 
-  return { groups, matches, total: all.length, alternatives };
+  return { groups, matches: all.slice(0, top), total: all.length, alternatives };
 }
 
 /** 单条短语直接检索（API/CLI 用），返回按分排序的条目 */

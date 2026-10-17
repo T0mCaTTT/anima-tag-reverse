@@ -1,0 +1,1456 @@
+{
+  "schema": "anima-tag-reverse/phrase-pool@1",
+  "built_at": "20261008-141319",
+  "source": "luo-fe",
+  "note": "≥3 token 的长短语候选，只在技能侧 lexicon.poolEnabled / --pool 打开时参与召回；不进主索引",
+  "fields": [
+    "tag",
+    "big",
+    "sub",
+    "bucket",
+    "tokens",
+    "src"
+  ],
+  "rows": [
+    {
+      "tag": "against goal net",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "against sports equipment",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "ankles behind neck",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "ankles beside head",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "another person's hands",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "arms behind pole",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "arms under knees",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "body fits perfectly",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "body pressed flat",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "bottom right corner",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "bouncing in rhythm",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "boy behind girl",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "boy's hand on thigh",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "chalk dust in air",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cheeks bulging slightly",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cheeks bulging with semen",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cheeks flushed deep pink",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cheeks flushed pink",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cheeks slightly pink",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cinematic front composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cinematic golden hour composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cinematic high angle composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cinematic low angle composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cinematic side composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cleaning tools on wall",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "close to man",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "close to man face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cloth female nude male",
+      "big": "cb:nsfw",
+      "sub": "性行为",
+      "bucket": "性行为/成人",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cloth male nude female",
+      "big": "cb:nsfw",
+      "sub": "性行为",
+      "bucket": "性行为/成人",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "clothing show through",
+      "big": "og:attire",
+      "sub": "其他",
+      "bucket": "服装/配饰",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "collapsed on man",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cute expression dazed and satisfied",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cute face tilted up",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "cute face turned to side",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dazed exhausted expression",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dazed with pleasure",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dim fluorescent light",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dim fluorescent light from stairwell",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dim light from pool area",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dim light from stairwell",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dim warm light",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dramatic warm afternoon light",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dramatic warm lamplight",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dried tear tracks",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dust motes floating in light",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "dust motes in light",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "edge of pool",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "empty) from front",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "enduring) from front",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "entire body in frame",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "examination of body",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of dazed continuous exhaustion",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of dazed continuous pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of dazed unwanted pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of excited mounting pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of exhausted dazed afterglow",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of growing self pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of reluctant melting pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "expression of total mind breaking climax",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 6,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes darting away",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes half closed in bliss",
+      "big": "og:face",
+      "sub": "情绪",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes half lidded",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes half open",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes rolling slightly with pleasure",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes squeezed shut",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes tightly shut",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes wide and teary",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes wide with intense sensation",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes wide with shock",
+      "big": "og:face",
+      "sub": "情绪",
+      "bucket": "表情/情绪",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes wide with sudden sensation",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "eyes wide with unexpected pleasure",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "face of pleasure",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "faint pink cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "faint pink round cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "flushed pink round cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "flushed round cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "flushed round cheeks bulging",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on butt",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on chest",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on expression",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on eyes",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on fluids",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on pinned wrists",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "focus on xxx",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "full frontal nudity",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl bouncing in air",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl collapsed on boy",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl collapsed on shelf",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl dropped to ground",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl leaning side",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl riding boy",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl riding fast",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "girl with drunk flushed face",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "gray patterned hem",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "green banker's lamp",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "green banker's lamp glowing",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hand near face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hand on throat",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands at sides",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands behind supporting",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping ankles",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping sheets",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping shoulders",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping small waist",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping small waist tightly",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands gripping table edge",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "hands on man chest",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "head and shoulders",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "head tilted forward",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "head tilted up",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "head turned away",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "head turned to side",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "high angle composition",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intense dramatic atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intense erotic aftermath atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intense erotic atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intense erotic climax atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intensely flushed pink cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intensely flushed round cheeks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "intimate sensual atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "knees parted wide",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "knees pressed together",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "knees pressed together shyly",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "knees slightly parted",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "knees squeezed together",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "leg held up high",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "light rays on face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "loose blue strands framing face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "lower lip bitten",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "man hand on breast",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "man on top",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "man silhouette approaching",
+      "big": "og:image-composition",
+      "sub": "其他",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "manual cast dtype",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "masked face tilted",
+      "big": "og:attire",
+      "sub": "其他",
+      "bucket": "服装/配饰",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "maybe for stage 1",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "medical examination table",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "morning light on face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "mouth open in continuous moans",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "mouth open in startled gasp",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "mouth open in stifled moan",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "mouth wide open screaming",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "other hand wiping forehead",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "other on thigh",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "peaceful exhausted expression",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "peaceful satisfied expression",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "pinafore pushed aside",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "pinching stiff nipple",
+      "big": "cb:nsfw",
+      "sub": "性行为",
+      "bucket": "性行为/成人",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "pooling on pool deck",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "post coital daze",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "pulled by wrist",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "resistance fading into reluctant submission",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "resistance melting into reluctant pleasure",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "resting on man chest",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "riding him as he sits",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "riding him slowly",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "rolled slightly upward",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "scattered swimwear and towels",
+      "big": "og:body-parts",
+      "sub": "其他",
+      "bucket": "身体特征/外观",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "semen on chin",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "semen on face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "sheer black stockings",
+      "big": "og:attire",
+      "sub": "其他",
+      "bucket": "服装/配饰",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "sleeping on arms",
+      "big": "og:posture",
+      "sub": "其他",
+      "bucket": "动作/姿势",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "slightly high angle",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "slightly low angle",
+      "big": "og:image-composition",
+      "sub": "视角与镜头",
+      "bucket": "视角/构图",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "slumped against concrete stairwell wall",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "slumped on swimming pool deck",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "sperm swimming towards egg",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "suction cup marks",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "sunrise light warming body",
+      "big": "og:lighting",
+      "sub": "光影氛围",
+      "bucket": "场景/背景/光影",
+      "tokens": 4,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "surrounded by people taking photos",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "swimming pool deck",
+      "big": "og:backgrounds",
+      "sub": "其他",
+      "bucket": "场景/背景/光影",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "tense dramatic atmosphere",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "tilt shift lens",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "trying to hide",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "wax on body",
+      "big": "og:body-parts",
+      "sub": "身体部位",
+      "bucket": "身体特征/外观",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "wax on face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "white inner layer",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "white sneaker on other foot",
+      "big": "cb:misc",
+      "sub": "其他",
+      "bucket": "其他/未分类",
+      "tokens": 5,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "youthful round face",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    },
+    {
+      "tag": "youthful round faces",
+      "big": "og:face",
+      "sub": "表情",
+      "bucket": "表情/情绪",
+      "tokens": 3,
+      "src": "luo-fe"
+    }
+  ]
+}

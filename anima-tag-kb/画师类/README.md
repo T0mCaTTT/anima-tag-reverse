@@ -2,6 +2,13 @@
 
 > 构建日期 **2026-10-06** ｜ 38,306 条标签 / 69 个大分类 · 711 个小分类 ｜ 模型 Anima 2B (CircleStone Labs × Comfy Org)
 > 本目录由 `node scripts/build-hierarchy.mjs` 生成，**不要手改 json**（下次构建会整文件覆盖）。
+> 构建之后又并进三批增量（构建完按顺序补跑这三支合并脚本即可恢复，都幂等）：
+> **+171 条**（第 4 期 ③ Luo-fe 分流，`../skills/anima-tag-reverse/tools/merge-luo-clean.mjs --apply`）与
+> **+739 条**（第 6 期并入外部模板「ANIMA3 提示词生成模板 v3.1」，`scripts/merge-anima3.mjs --write`，
+> 它同时写 `bigs/*.json` 并把 `manifest.meta.total` 抬到 **39,045**、在 `meta.supplements[]` 留记录）与
+> **+12 条**（第 7 期本地缺口回填，`scripts/merge-patch7.mjs --write`，同时给 79 个已有标签补 158 条中文别名，
+> 把 `manifest.meta.total` 抬到 **39,057**；源数据 `data/patch7-tags.json`，报告 `画师类/_merge/patch7-merge-*.json`）。
+> 所以检索索引现为 **39,228 行**（38,306 + 171 + 739 + 12），与只讲构建口径的 38,306 不是一个数。
 
 ## 文件结构
 
@@ -54,5 +61,6 @@
 
 1. 改数据：动 `scripts/` 下的表（`taxonomy.mjs` 的层级规则、`build-hierarchy.mjs` 的译名补全、`data/sources/` 的原始数据），**不要改本目录的 json**。
 2. 重建：`node scripts/build-hierarchy.mjs` → `node scripts/finish-build.mjs`。
+2b. 补跑增量（重建会覆盖上面的两批）：`node skills/anima-tag-reverse/tools/merge-luo-clean.mjs --apply` → `node scripts/merge-anima3.mjs --write`。
 3. 页面不用改：`viewer/template.html` 会读 `manifest.json` 自适应，分片变多变少都行。
 4. 换机器/换盘符：整个 `anima-tag-kb/` 目录可以直接拷走，双击 `启动展览板.cmd` 即可。

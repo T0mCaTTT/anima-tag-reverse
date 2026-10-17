@@ -15,16 +15,20 @@
  *                 这类缺失不会被 B 类抓到：层里有别的标签，缺的那一项却静默丢了。
  *   D multiSubject 多主体信息不全（人数 >1 但只描述了一个人）
  *   E conflict    同维度互相冲突的标签并存
+ *   E1 tier-blocked（第 1–2 期新增）本档被档位门挡下的标签——须显式列出，
+ *                 否则会被误当成「词库没词」，重演自审静默跳过的老坑。
  *
- * 候选项的三种来源，逐条带 source 字段以便核对：
+ * 候选项的四种来源，逐条带 source 字段以便核对：
  *   alt      反推时宽召回（BROAD 档）多捞到的备选
  *   sibling  词库里与已命中标签同子类/同层的高频邻居
  *   preset   固定建议项（姿势、镜头、时间等结构性缺项）
  *   manual   词库里没有、需调用方按建议写法自己补的项（`C-spec-*` 全是这一类）
+ *   tier     被档位门挡下的标签（换更高档位即可拿回）
  */
 import { dispTag } from './compose.mjs';
 import { keyOf } from './normalize.mjs';
 import { LAYER_NAME } from './config.mjs';
+import { visibleAt } from './tier-policy.mjs';
 import { PHRASE, phraseOf } from './nl.mjs';
 
 /** 层号升序表（LAYER_NAME 本身按 0-8 排列） */
@@ -300,6 +304,67 @@ export function buildGaps(res, plan = {}, ctx = {}) {
     };
     add(gap);
     specGaps.push(gap);
+  }
+
+  // ---- E. 档位门挡下的标签（第 1–2 期 · 面 4）----------------------------
+  // 「被内容门挡下」是最容易被误当成「词库没有」的一类缺口，必须显式列出来：
+  // 老坑是自审静默跳过，交付的标签串少了东西也没人说。
+  const blocked = ctx.tierBlocked || [];
+  if (blocked.length) {
+    const tier = (ctx.policy && ctx.policy.tier) || '';
+    const needTier = need => {
+      const names = (ctx.policy && ctx.policy.tierNames) || [];
+      for (let i = 0; i < names.length; i++) {
+        if (visibleAt(i, names.length, need)) return names[i];
+      }
+      return names[names.length - 1] || '';
+    };
+    add({
+      id: 'E1',
+      kind: 'tier-blocked',
+      severity: 'low',
+      title: `有 ${blocked.length} 条标签被「${tier}」档挡下了`,
+      detail: blocked.map(b => `\`${b.tag}\`（需 ${needTier(b.need) || b.need} 档）`).join('、'),
+      why: '档位门按画面可见度判级（当前档越低，露骨标签越不出）；这不是词库缺词，换档就能拿回来',
+      suggestions: blocked.map(b => ({
+        id: `E1-${b.tag}`,
+        label: b.display || b.tag,
+        zh: b.zh,
+        tag: b.tag,
+        source: 'tier',
+        why: `需要 ${needTier(b.need) || b.need} 档；当前档「${tier}」不出这条`
+      }))
+    });
+  }
+
+  // ---- F. 第 6 期：ANIMA3 模板规则的两类提醒（互斥组合 / 标签总数区间）----
+  // 只报不拦：交付串已经发出去了，这里只让人知道「这几条通常不同时出现」。
+  // 数据来自 ctx.annotate（index.mjs 里 rules.mjs 的 annotate()），没有就是没开这项。
+  const ann = ctx.annotate || null;
+  let fIdx = 0;
+  for (const m of (ann && ann.mutex) || []) {
+    fIdx += 1;
+    add({
+      id: `F${fIdx}`,
+      kind: 'mutex',
+      severity: 'low',
+      title: m.kind === 'count' ? `同组标签堆多了：${m.groupZh || m.group}` : `互斥：${m.groupZh || m.group}`,
+      detail: m.text,
+      why: (m.src ? m.src + '；' : '') + '模板规则：这类组合通常不同时出现，一般只留其中一条。只提醒，不自动删。',
+      suggestions: []
+    });
+  }
+  if (ann && ann.count && !ann.count.ok) {
+    fIdx += 1;
+    add({
+      id: `F${fIdx}`,
+      kind: 'tagCount',
+      severity: 'low',
+      title: '标签总数不在模板区间里',
+      detail: ann.count.text,
+      why: 'ANIMA3 模板 §4.2 的实战统计区间；偏少常是细节没写全，偏多会互相稀释。只提醒，不自动增删。',
+      suggestions: []
+    });
   }
 
   // ---- 汇总 --------------------------------------------------------------

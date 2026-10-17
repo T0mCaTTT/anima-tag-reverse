@@ -110,11 +110,87 @@ export const POSITIVE_PREFIX = 'masterpiece, best quality, score_7, safe';
 export const NEGATIVE_DEFAULT = 'worst quality, low quality, score_1, score_2, score_3, artist name, blurry, jpeg artifacts, chromatic aberration';
 
 /**
- * 官方分级标签，由弱到强。前缀第 4 位默认是 safe；
+ * 内置回退档名表（v2.0.0：**三档**）。前缀第 4 位默认是 safe；
  * 命中内容里出现更高级别的分级标签时（R18 / NSFL 描述照常匹配，本技能不做任何内容审查与过滤），
  * 只把前缀里的分级 token 换成对应级别，保证「标签格式符合标签库规范」而不是压制内容。
+ *
+ * ⚠ 第 5 期起这张表**只是内置回退默认**：运行时档名来自面板配置
+ * （唯一真理源，`$DSH_HOME/anima-panel/panel-config.json`），由 `src/panel-config.mjs`
+ * 读出后经 `opts.tierNames` 注入 `compose()`；用户在面板里改名或加档时，这里不动。
+ * 目前只剩三处仍需要它：① 没有任何配置文件时的回退（`buildPolicy` / `compose` 的默认档名表）
+ * ② `--info` 与帮助文案里的默认档举例 ③ 顶层 API 的再导出。
+ *
+ * 表里**只有当前三档**：旧档名 `questionable` / `explicit` 不是档位，
+ * 它们只在 `panel-config.mjs` 的 `LEGACY_TIERS` 里用于「硬报错 + 迁移对照表」。
  */
-export const RATING_TAGS = ['safe', 'sensitive', 'questionable', 'nsfw', 'explicit'];
+export const BUILTIN_TIER_NAMES = Object.freeze(['safe', 'sensitive', 'nsfw']);
+
+/**
+ * @deprecated v2.0.0 之前的旧名（当时是 `safe / sensitive / questionable / nsfw / explicit` 五档）。
+ * 保留这个别名只为兼容还按旧名 import 的调用方，它现在**就是** {@link BUILTIN_TIER_NAMES}，
+ * 不含旧档名。新代码一律用 `BUILTIN_TIER_NAMES`。
+ */
+export const RATING_TAGS = BUILTIN_TIER_NAMES;
+
+/**
+ * ===== 第 1–2 期：档位驱动的五个行为面（内置默认表）=====
+ *
+ * 这四张表是「内置默认」，面板配置（`$DSH_HOME/anima-panel/panel-config.json`）里的
+ * `negative.byTier` / `faces.*` / `lexicon.*` / `output.*` 会覆盖或追加它们；
+ * 档名可被面板改名，所以下表一律用**语义档位**（见 tier-policy.mjs 的语义档映射）：
+ *   'safe'  三档最低档（全年龄）
+ *   'mid'   中间档及以上可见（擦边级）
+ *   'top'   只有最高档可见（露骨级）
+ * 三档默认表下：safe → safe / mid → sensitive / top → nsfw。
+ */
+
+/** 各档的负面增补（基线 NEGATIVE_DEFAULT 之外追加；空串表示不加）。键是**语义档位**。 */
+export const NEG_BY_TIER = {
+  safe: 'nsfw, nude, nipples, explicit, censored',
+  mid: 'nude, nipples, explicit',
+  // 最高档不压制露点，改加「不打码」纪律（NEG_TOP_EXTRA）；删掉对露点的压制
+  top: ''
+};
+
+/** 最高档额外追加的负面词（不打码纪律） */
+export const NEG_TOP_EXTRA = 'mosaic censoring, bar censor, censored';
+
+/**
+ * 误杀项删除规则：正向标签里出现「触发词」时，从负面串里删掉「该删的项」。
+ * 照抄 Anima v4 的纪律：纯场景 / 雨景 / 水面出现时，负面里的
+ * mirror / reflection / duplicate 会把画面里的镜面与水影一起打掉。
+ */
+export const NEG_DROP_RULES = [
+  { id: 'scene-mirror', when: /^(?:mirror|reflection|water|rain|rainy|puddle|pool|river|sea|ocean|lake|wet)$/i, drop: ['mirror', 'reflection', 'duplicate'] }
+];
+
+/**
+ * 档位门（面 4）：标签 → 最低可见档位（语义档）。
+ * 词库里没有档位字段，所以门由三条信号组成：
+ *   ① 本表（明确词表）② 大分类信号（TIER_GATE_BIGS）③ 白名单（TIER_GATE_ALLOW 永不被挡）
+ * 被挡下的标签不会静默消失——写进 gaps 的 `tier-blocked`（见 gaps.mjs）。
+ */
+export const TIER_GATE = {
+  top: [
+    'pussy', 'nipples', 'nipple', 'nude', 'naked', 'completely nude', 'sex', 'vaginal', 'anal',
+    'cum', 'fellatio', 'penetration', 'stomach bulge', 'womb tattoo', 'penis', 'topless',
+    'pubic hair', 'areolae', 'spread pussy', 'paizuri', 'oral', 'cum on body', 'bukkake'
+  ],
+  mid: [
+    'lingerie', 'panties', 'underwear', 'bra', 'swimsuit', 'bikini', 'wet clothes', 'see-through',
+    'cleavage', 'no bra', 'shirt lift', 'pantyhose', 'garter belt', 'thigh strap', 'undressing',
+    'partially undressed', 'bare shoulders', 'midriff', 'crop top', 'navel', 'wet shirt'
+  ]
+};
+
+/** 大分类信号：命中这些大分类的标签按语义档门限处理（照抄 v4：cb:nsfw / og:censorship 归第 8 层） */
+export const TIER_GATE_BIGS = { 'cb:nsfw': 'top', 'og:censorship': 'top' };
+
+/** 白名单：即使是场景/环境词或带档位色彩，也永不挡（纯环境与画面元素不该被内容门牵连） */
+export const TIER_GATE_ALLOW = new Set([
+  'water', 'rain', 'rainy', 'puddle', 'pool', 'poolside', 'river', 'sea', 'ocean', 'lake',
+  'mirror', 'reflection', 'wet', 'wet hair', 'bath', 'bathtub', 'shower', 'swimming'
+]);
 
 /**
  * 单字汉字表面的准入条件。
@@ -155,11 +231,6 @@ export const SCORE = {
   minScore: 0.46,          // 低于此分直接丢
   minSim: 0.52,            // 相似度下限（纯相似度路径）
   topPerClause: 3,         // 每个分句最多留几个候选
-  // 逐字命中（surface/forced/jp/rule）在全局截断时的名额倍数：matchClause 已让它们豁免
-  // perClause 名额，但全局 all.slice(0, top) 原先纯按分数切，会把 R18 图里逐字写出的
-  // sex / penis / censored 这类关键词切掉（实测位次 98–118，top:100 全丢且分级漏判）。
-  // 逐字命中最多保留 top×该倍数条，再回填非逐字命中到 top，既补回关键标签又不炸量。
-  literalTopMult: 2,
   exact: { tag: 1.0, zh: 0.97, alias: 0.93, jp: 0.95, phrase: 0.88 }
 };
 

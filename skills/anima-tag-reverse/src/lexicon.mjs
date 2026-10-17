@@ -1,8 +1,9 @@
 /**
  * lexicon.mjs —— 词库加载与索引构建（读展览板用的那套分包，零依赖）
  *
- * 数据来源：anima-tag-kb/画师类/search-index.json（38,306 行，4.2MB）
+ * 数据来源：anima-tag-kb/画师类/search-index.json（39,216 行 = 构建基线 38,306 + luo-fe 增量 171 + ANIMA3 增量 739，4.9MB）
  *   字段顺序 fields = ["tag","big","order","zh","aliases","weight","freq","confidence","sub","bigName","slot","official"]
+ *   可选增量：anima-tag-kb/补充短语池/phrase-pool.json（≥3 token 的长短语，只有 opts.pool 打开时才读）
  *
  * 建三类索引（都在内存里，一次构建 ~1s）：
  *   surfaceMap  「去空格去标点」的表面 → 条目        汉字句子的最长匹配扫描靠它
@@ -17,6 +18,10 @@ import { BIG_LAYER, COUNT_SUB, EXCLUDE_BIGS, EXTRA_ZH, FUNCTION_WORDS } from './
 const MAX_SURFACE_LEN = 32;      // 扫描窗口上限（字符数）
 const MAX_CANDIDATES = 80;       // 每个分句进入精算的候选上限
 
+/** 补充短语池（第 4 期 ③：Luo-fe 长短语分流，默认不参与召回） */
+export const POOL_DIR = '补充短语池';
+export const POOL_FILE = 'phrase-pool.json';
+
 export function loadIndex(kbDir) {
   const file = path.join(kbDir, 'search-index.json');
   if (!fs.existsSync(file)) {
@@ -25,9 +30,26 @@ export function loadIndex(kbDir) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-export function buildLexicon(kbDir) {
+/** 短语池文件在词库目录的隔壁：anima-tag-kb/补充短语池/phrase-pool.json */
+export function poolPath(kbDir) {
+  return path.join(path.dirname(kbDir), POOL_DIR, POOL_FILE);
+}
+
+/** 读短语池；文件缺失或坏了都返回 null（池是可选增量，绝不该把技能搞挂） */
+export function loadPool(kbDir) {
+  const file = poolPath(kbDir);
+  if (!fs.existsSync(file)) return null;
+  try {
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+    if (!doc || !Array.isArray(doc.rows)) return null;
+    return { file, doc, rows: doc.rows };
+  } catch { return null; }
+}
+
+export function buildLexicon(kbDir, opts = {}) {
   const idx = loadIndex(kbDir);
   const rows = idx.rows || [];
+  const baseSize = rows.length;
   // search-index.json 不带 meta，词库概况在 manifest.json 里
   let meta = idx.meta || {};
   let cats = idx.cats || [];
@@ -41,6 +63,29 @@ export function buildLexicon(kbDir) {
       }
     } catch { /* manifest 坏了不影响匹配 */ }
   }
+
+  // ---- 第 4 期 ③：补充短语池（lexicon.poolEnabled / --pool 才读，默认路径逐字节不变）----
+  const catById = new Map(cats.map(c => [c.id, c]));
+  const poolRowStart = rows.length;
+  let poolInfo = { enabled: false, file: poolPath(kbDir), count: 0 };
+  if (opts.pool) {
+    const pool = loadPool(kbDir);
+    if (pool) {
+      for (const r of pool.rows) {
+        const tag = String(r && r.tag || '').trim();
+        if (!tag) continue;
+        const cat = catById.get(r.big) || {};
+        // 与 search-index 行同形（多出来的第 13 个元素只是来源标记，读表的下标 0–11 不受影响）
+        rows.push([tag, r.big || '', cat.order ?? 69, '', '', '', '', '待验证', r.sub || '', cat.name || '其他', '', 0, r.src || 'pool']);
+      }
+      poolInfo = { enabled: true, file: pool.file, count: rows.length - poolRowStart, builtAt: pool.doc.built_at, source: pool.doc.source };
+    } else {
+      poolInfo = { enabled: true, file: poolPath(kbDir), count: 0, missing: true };
+    }
+  }
+  const poolIdx = new Set();
+  for (let i = poolRowStart; i < rows.length; i++) poolIdx.add(i);
+
   const surfaces = new Map();     // key → { i, kind, score }
   const tokens = new Map();       // token → number[]
   const byTagKey = new Map();
@@ -90,6 +135,11 @@ export function buildLexicon(kbDir) {
     const bigName = r[9] || '';
     const slot = r[10] || '';
     const official = r[11] ? 1 : 0;
+    // 第 13 个元素（下标 12）是来源标记：补充短语池写来源串，ANIMA3 合并行写 `anima3:mid|top|any`。
+    // fields 只有 0–11，读表方（展板 / 本文件）都只读那几个下标，多出来的这个当**档位门**用：
+    // 明确露骨的标签因此能在 safe 档被挡下、sensitive/nsfw 档照常出现，不需要动 TIER_GATE 词表。
+    const srcMark = typeof r[12] === 'string' ? r[12] : '';
+    const need = srcMark === 'anima3:mid' ? 'mid' : srcMark === 'anima3:top' ? 'top' : null;
 
     const zhCore = stripGloss(zh);
     const freqN = parseFreq(freqStr);
@@ -106,7 +156,8 @@ export function buildLexicon(kbDir) {
     entries[i] = {
       i, tag, tagKey: keyOf(tag), big, bigName, sub, slot, zh, zhCore,
       aliasRaw, aliasTokens, aliasCjk,
-      freqN, freqStr, conf, official, layer,
+      freqN, freqStr, conf, official, layer, need,
+      pool: poolIdx.has(i),
       excluded: EXCLUDE_BIGS.has(big)
     };
 
@@ -125,7 +176,9 @@ export function buildLexicon(kbDir) {
     // 手工补充的常见说法（EXTRA_ZH）——只补确认存在于库里的标签
     const extra = EXTRA_ZH[tag];
     if (extra) for (const w of extra) addSurface(w, i, 'zh', 0.95);
-    byTagKey.set(entries[i].tagKey, i);
+    // 池条目排在最后，同键时不许顶掉主表条目
+    if (entries[i].pool) { if (!byTagKey.has(entries[i].tagKey)) byTagKey.set(entries[i].tagKey, i); }
+    else byTagKey.set(entries[i].tagKey, i);
 
     // ---- 词元索引 ----
     // 别名只有当它"短"（≤8 段）时才进索引：人物条目的别名其实是该角色的整套标签，
@@ -162,6 +215,10 @@ export function buildLexicon(kbDir) {
     meta: meta,
     cats: cats,
     size: entries.length,
+    /** 主表行数（不含短语池增量） */
+    baseSize,
+    /** 短语池状态：{ enabled, file, count, source?, builtAt?, missing? } */
+    pool: poolInfo,
     /** 条目用于相似度比较的表面文本（标签、释义核心、别名片段） */
     surfaceTexts(e) {
       if (e._st) return e._st;

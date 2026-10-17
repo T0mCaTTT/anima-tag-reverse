@@ -183,7 +183,28 @@ export const SHORT_ALIASES = {
   // 身材
   '飞机场': 'flat chest', '巨乳': 'large breasts', '贫乳': 'small breasts', '腹肌': 'abs',
   '美腿': 'thighs', '锁骨': 'collarbone', '肚脐': 'navel', '肌肉': 'muscular',
-  '丰满': 'curvy', '骨感': 'skinny', '幼态': 'child', '成熟': 'mature female'
+  '丰满': 'curvy', '骨感': 'skinny', '幼态': 'child', '成熟': 'mature female',
+  // 第 7 期补入：本地词库查不到、或中文分词会把整词切碎的说法，只能在这一层做「整串命中」
+  '鸭子坐': 'wariza', '鸭坐': 'wariza', 'W坐': 'wariza', '割坐': 'wariza',
+  '背对镜头': 'from behind', '背影机位': 'from behind',
+  '屁股特写': 'ass focus', '屁股怼脸': 'ass focus',
+  '贴地视角': 'low angle', '镜头贴近地面': 'low angle',
+  '鱼眼': 'fisheye', '鱼眼镜头': 'fisheye', '鱼眼透视': 'fisheye', '桶形畸变': 'fisheye',
+  '星芒': 'star (symbol)', '光爆': 'light rays',
+  '精液': 'cum', '白浊': 'cum', '全身精液': 'cum on body',
+  '双手合十': 'palms together', '合十': 'palms together',
+  '彩绘玻璃': 'stained glass', '彩窗': 'stained glass',
+  '紧身连体衣': 'bodysuit', '举牌': 'holding sign', '白牌': 'blank sign',
+  // 第 9 期补入：触手／肉穴场景的口语与被动结构（实测整句中文在文本入口召不回，只能在这一层做整串命中）
+  '幼女': 'loli', '幼态少女': 'loli',
+  '触手肉穴': 'tentacle pit', '肉穴': 'tentacle pit', '肉壁': 'tentacle pit', '肉空间': 'tentacle pit',
+  '触手侵犯': 'tentacle sex', '被触手侵犯': 'tentacle sex', '触手凌辱': 'tentacle sex', '触手性交': 'tentacle sex',
+  '嘴里塞着触手': 'tentacle in mouth', '嘴里含着触手': 'tentacle in mouth', '口中有触手': 'tentacle in mouth',
+  '嘴里塞着': 'mouth hold', '哭喊': 'crying', '尖叫': 'screaming',
+  '发抖': 'trembling', '颤抖': 'trembling', '失神': 'empty eyes', '发情脸': 'ahegao', '翻白眼': 'rolling eyes',
+  '阴道插着触手': 'vaginal', '下面插着触手': 'penetration', '双穴同插': 'double penetration',
+  '身上全是精液': 'cum on body', '精液溢出': 'cum overflow', '精液喷涌': 'cum overflow',
+  '体液飞溅': 'splashing', '眼睛发光': 'glowing eyes', '油光皮肤': 'glossy skin', '虹彩': 'iridescent'
 };
 
 /** 规则表里所有参与「整串直接命中」的短语（按长度降序 → 最长优先） */

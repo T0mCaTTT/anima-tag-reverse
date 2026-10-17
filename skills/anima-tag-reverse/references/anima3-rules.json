@@ -1,0 +1,374 @@
+{
+  "built_at": "2026-10-08",
+  "source": "ANIMA3 提示词生成模板 v3.1（外部 SKILL.md，2215 行）",
+  "mutex": [
+    {
+      "id": "viewpoint",
+      "zh": "视角互斥",
+      "src": "§3.1 第96-104行",
+      "pairs": [
+        { "a": ["from front"], "b": ["from behind"], "note": "物理矛盾" },
+        { "a": ["from above"], "b": ["from below"], "note": "物理矛盾" },
+        { "a": ["looking at viewer"], "b": ["facing away"], "note": "视线矛盾" },
+        { "a": ["pov"], "b": ["full body"], "note": "POV 不可能看到自己全身" },
+        { "a": ["close-up"], "b": ["full body"], "note": "景别矛盾" }
+      ]
+    },
+    {
+      "id": "identity",
+      "zh": "身份互斥",
+      "src": "§3.1 第106-113行",
+      "pairs": [
+        { "a": ["solo"], "b": ["hetero", "1boy", "yuri"], "note": "单人不存在互动" },
+        { "a": ["femdom"], "b": ["male-on-female rape"], "note": "逻辑矛盾（主导方冲突）" },
+        { "a": ["sleeping", "unconscious"], "b": ["looking at viewer"], "note": "无意识不可能直视" },
+        { "a": ["blindfold"], "b": ["heart-shaped pupils", "rolling eyes"], "note": "看不到眼睛" }
+      ]
+    },
+    {
+      "id": "clothing",
+      "zh": "服装互斥",
+      "src": "§3.1 第115-124行",
+      "pairs": [
+        { "a": ["completely nude"], "b": ["任何具体服装标签"], "note": "全裸不穿衣" },
+        { "a": ["pantyhose"], "b": ["barefoot"], "note": "穿了丝袜不可能光脚（除非 torn pantyhose）" },
+        { "a": ["blindfold"], "b": ["glasses"], "note": "物理冲突" },
+        { "a": ["cat lingerie", "lace lingerie", "babydoll", "negligee", "chemise"], "b": ["no panties", "bottomless"], "note": "内衣套装隐含包含内裤，模型优先解析套装忽略暴露标签；需暴露时拆为单件（cat bra + no panties）" }
+      ]
+    },
+    {
+      "id": "action",
+      "zh": "动作互斥",
+      "src": "§3.1 第126-133行",
+      "pairs": [
+        { "a": ["standing sex"], "b": ["lying", "on back"], "note": "体位矛盾" },
+        { "a": ["missionary"], "b": ["doggystyle"], "note": "不可能同时两个体位" },
+        { "a": ["cowgirl position"], "b": ["prone bone"], "note": "体位矛盾" },
+        { "a": ["fellatio"], "b": ["cunnilingus"], "note": "同一人执行时：嘴只有一张" }
+      ]
+    },
+    {
+      "id": "detail-overload",
+      "zh": "细节标签过度",
+      "src": "§3.1 第135-152行",
+      "pairs": [
+        { "a": ["spread toes"], "b": ["toe scrunch", "toes curling"], "note": "脚趾：舒展 vs 蜷缩，物理矛盾" },
+        { "a": ["spread toes"], "b": ["feet together"], "note": "脚趾：分趾需要空间，合拢则压缩" },
+        { "a": ["spread fingers"], "b": ["clenched fist", "gripping"], "note": "手指：张开 vs 握拳" },
+        { "a": ["bouncing breasts"], "b": ["breasts squeeze together"], "note": "胸部：弹跳 vs 挤压，动态矛盾" },
+        { "a": ["open mouth"], "b": ["clenched teeth", "closed mouth"], "note": "嘴巴：张嘴 vs 闭嘴" },
+        { "a": ["rolling eyes"], "b": ["looking at viewer"], "note": "眼睛：翻白眼 vs 直视" },
+        { "a": ["spread legs"], "b": ["legs together"], "note": "腿部：分开 vs 并拢" },
+        { "a": ["foot focus", "footjob", "toe scrunch", "spread toes"], "b": ["foot focus", "footjob", "toe scrunch", "spread toes"], "note": "足部整体：3 个以上足部标签叠加即过度细化，导致脚趾/脚掌畸形" }
+      ]
+    }
+  ],
+  "counts": {
+    "single": [20, 36],
+    "duo": [26, 44],
+    "group": [34, 54],
+    "note": "§4.2 统计口径：基于法典4345条实战prompt，平均23.4标签，中位数21，P75=29，P90=36；三个区间均含质量词+画师。",
+    "src": "§4.2 第195-220行"
+  },
+  "viewDefaults": {
+    "single": ["direct eye contact", "facing viewer"],
+    "src": "§4.3 第222-235行",
+    "note": "该标签放在 expression 槽末尾或 camera 槽开头均可。例外（不加）：用户明确要求「背影/背对/转身离开/侧脸/profile/from behind」时不注入；动作互斥表中 sleeping / unconscious 也不能配 looking at viewer。两人及以上场景也不强制注入 direct eye contact，改为按角色间互动关系选择（如 looking at another），或由用户明确指定。"
+  },
+  "viewerClauses": [
+    { "tag": "as if inviting the viewer to escape together", "zh": "像是在邀请观众一起逃走", "when": "邀请/共犯" },
+    { "tag": "as if judging the viewer", "zh": "像是在审判观众", "when": "审判/对峙" },
+    { "tag": "as if handing the last hope to the viewer", "zh": "像是把最后的希望交到观众手里", "when": "托付/交接" },
+    { "tag": "as if daring the viewer to come closer", "zh": "像是在挑衅观众靠近点", "when": "挑衅/诱惑" },
+    { "tag": "as if begging the viewer for help", "zh": "像是在向观众求助", "when": "求助/绝望" },
+    { "tag": "as if showing off to the viewer what they can't have", "zh": "像是在向观众炫耀他们得不到的东西", "when": "炫耀/NTR" },
+    { "tag": "as if aware of being watched by the viewer", "zh": "像是意识到自己正被观众看着", "when": "羞耻/被注视" },
+    { "tag": "as if offering herself entirely to the viewer", "zh": "像是把自己整个奉献给观众", "when": "臣服/献身" }
+  ],
+  "themes": [
+    {
+      "id": "ntr",
+      "zh": "NTR（寝取）",
+      "src": "§14.1 第1816-1843行",
+      "tags": [
+        "1boy", "1girl", "ahegao", "after sex", "another man", "blush", "coming home",
+        "corrupted", "couple having sex inside", "cuckold", "crying", "disheveled clothes",
+        "empty eyes", "forced to watch", "from outside", "from reluctant to eager", "from side",
+        "guilty pleasure", "hand covering own mouth", "heart-shaped pupils", "hetero",
+        "husband waiting", "left: chatting on phone", "messy hair", "mind break", "netorare",
+        "peeping", "phone screen visible", "pov", "right: sex from behind", "sex from behind",
+        "sex", "smartphone visible", "split screen", "stealth sex", "suspicious",
+        "talking on phone", "text message", "tears", "through window", "watching",
+        "bedroom", "love hotel"
+      ],
+      "requires": [
+        "1girl, 1boy, hetero",
+        "被夺方 + 夺走方 + 苦主（苦主可选入镜或分屏）",
+        "跨槽位标签链必须同时覆盖 count/gender / pose/action / expression / camera/shot / scene"
+      ],
+      "forbids": [],
+      "notes": "核心公式：被夺走的人 × 夺走的方式 × 见证者的痛苦。核心不是体位多刺激，而在「谁在看 / 谁知道」——必须把见证者（苦主）入镜或分屏处理。分屏 split screen 是最强镜头工具，电话要素（talking on phone / smartphone visible / text message）是法典最高频 NTR 符号。氛围链按顺序铺：secret → cheating → guilty pleasure → netorare → corrupted → mind break → cuckold despair。关键变体：电话NTR（talking on phone + sex from behind + stealth sex + hand covering own mouth）、窗外NTR（from outside + through window + peeping + cuckold + forced to watch）、分屏NTR、事后归宅（after sex + coming home + messy hair + disheveled clothes + suspicious + husband waiting）、女友堕落（corrupted + mind break + ahegao + heart-shaped pupils + from reluctant to eager）。"
+    },
+    {
+      "id": "bdsm",
+      "zh": "束缚/BDSM",
+      "src": "§14.2 第1847-1874行",
+      "tags": [
+        "arms behind back", "audience", "ball gag", "bit gag", "blindfold", "body writing",
+        "bound arms", "bound torso", "bound", "bound wrists", "breast bondage", "bruise",
+        "chains", "choker", "crying", "drooling", "duct tape", "dungeon", "empty eyes",
+        "handcuffs", "hemp rope", "hogtie", "humiliation", "kinbaku", "kneeling", "leash",
+        "mind break", "mummified", "nude", "pillory", "plastic wrap", "public display",
+        "red marks", "red rope", "ring gag", "rope marks", "saliva trail", "scared",
+        "shibari", "skindentation", "spread eagle", "st andrews cross", "stone wall",
+        "struggling", "suspension", "tape bondage", "tears", "tied to post", "tied up",
+        "turtle shell bondage", "vacuum seal", "whip marks", "bedroom", "dark room",
+        "prison cell", "forced open mouth"
+      ],
+      "requires": [
+        "基础模板取 §5.3 双人正戏",
+        "先查 §14.2 再加束缚姿势 + 用具 + 绳痕"
+      ],
+      "forbids": [],
+      "notes": "核心公式：束缚方式 × 束缚位置 × 被缚者状态。核心在「剥夺行动自由」，tag 必须写清楚束缚了什么部位（arms / legs / torso / wrists / ankles）。绳痕（rope marks + skindentation）是束缚场景的关键真实感标签——没有绳痕就等于「刚绑上去还没开始」。五类变体：日式绳艺 shibari/kinbaku + hemp rope + turtle shell bondage + breast bondage；十字架/柱缚 st andrews cross + tied to post + spread eagle + pillory + public display；口具拘束 ball gag/ring gag/bit gag + drooling + saliva trail；另类束缚 duct tape/plastic wrap/mummified/vacuum seal（适合现代或犯罪场景）；公开凌辱 pillory + humiliation + audience + body writing。氛围链：bound → restrained → gagged → helpless → struggling → crying → empty eyes → mind break。"
+    },
+    {
+      "id": "rbq",
+      "zh": "RBQ/物化",
+      "src": "§14.3 第1878-1906行",
+      "tags": [
+        "after use", "all fours", "audience", "barcode tattoo", "body writing", "broken in",
+        "bukkake", "cum bath", "cum covered", "cum on body", "cum pool", "cumdump",
+        "degradation", "empty eyes", "excessive cum", "exhausted", "expressionless",
+        "forced to watch", "free use", "fucked silly", "gangbang", "glory hole",
+        "human toilet", "humiliation", "kneeling", "limp body", "mind break",
+        "multiple boys", "objectification", "one after another", "pillory", "presenting",
+        "price tag", "public display", "public use", "public", "stationary restraints",
+        "surrounded", "tally marks", "through wall", "urinal", "used goods", "dungeon",
+        "public toilet"
+      ],
+      "requires": [
+        "基础模板取 §5.5 多人",
+        "先查 §14.3 再加物化标记 + 过量体液 + 残骸感"
+      ],
+      "forbids": [],
+      "notes": "核心公式：物化程度 × 使用人数 × 被使用后的残骸感。核心在「人变成物」，标签要强调非人化（objectification / degradation / used goods）与过量体液（excessive cum / cum bath / cum pool）。tally marks / price tag / body writing 是画龙点睛的物化标记。与普通群交的区别：RBQ 强调「被用完后丢弃」的残骸感（after use + limp body + broken in），群交强调过程刺激。六类变体：标准肉便器 human toilet + urinal + bukkake；壁尻 through wall + stationary restraints + pillory + glory hole + public use；身体写字；展示台；多人共用 public use + gangbang + free use + one after another + cumdump；事后残骸。氛围链：objectification → degradation → used goods → human toilet → cumdump → mind break → empty eyes → broken in。"
+    },
+    {
+      "id": "femboy-futa",
+      "zh": "男娘/Futa",
+      "src": "§14.4 第1910-1942行",
+      "tags": [
+        "1boy", "1girl", "ahegao", "anal sex", "anal", "androgynous", "artificial vagina",
+        "ass-to-ass", "blush", "blushing", "bodystocking", "chastity cage", "china dress",
+        "circle formation", "crossdressing", "cum", "cum in ass", "dominant", "double dildo",
+        "embarrassed", "evil smile", "excessive cum", "excessive speed", "fellatio", "femboy",
+        "flat breasts", "futa on female", "futa with futa", "futanari masturbation",
+        "futanari", "girl on top", "hands on hips", "huge penis", "large breasts", "latex",
+        "lustful", "maid outfit", "masturbation", "muscular male", "naked apron",
+        "otoko no ko", "pegging", "penis and vagina", "phimosis", "reluctant",
+        "reverse bunnysuit", "school uniform", "sex from behind", "shy", "slingshot swimsuit",
+        "small penis", "small penis visible", "smug", "satisfied", "trap", "trembling",
+        "x-ray", "yaoi", "crotchless pantyhose", "pantyhose"
+      ],
+      "requires": [
+        "基础模板取 §5.3 双人正戏",
+        "先查 §14.4 再切换 count/gender 与 appearance 体系"
+      ],
+      "forbids": [
+        "男娘体系与扶她体系不能混用（otoko no ko ≠ futanari）"
+      ],
+      "notes": "核心公式：生理特征 × 性行为方向 × 身份呈现。男娘与扶她是两个独立体系，不能混用（otoko no ko ≠ futanari）。男娘核心在「男性身体 + 女性外观 + 被侵犯」的倒错感，配方固定配 small penis + chastity cage + flat breasts，变体有壮汉后入男娘（muscular male + sex from behind + yaoi + anal）、带锁男娘、裸体围裙男娘。扶她核心在「女性身体 + 男性性器 + 主导侵犯」的征服感，固定配 huge penis + large breasts + penis and vagina + testicles，变体有扶她×女（futa on female + pegging + girl on top）、扶她×扶她（futa with futa + circle formation + double dildo + ass-to-ass）、扶她自慰（futanari masturbation + artificial vagina + dildo riding）。氛围链分两条：男娘 shy → blush → embarrassed → reluctant → ahegao → cum in ass；扶她 confident → dominant → smug → aggressive → excessive cum → satisfied。"
+    },
+    {
+      "id": "bestiality",
+      "zh": "异种",
+      "src": "§14.5 第1946-1974行",
+      "tags": [
+        "abduction", "absorption", "ahegao", "alien egg", "alien", "android",
+        "animal on top", "arachnid", "automated", "bestiality", "bound by tentacles",
+        "breeding", "canine penis", "corruption", "deep penetration", "egg laying", "egg",
+        "exhausted", "goblin", "huge penis", "infestation", "insect", "inside slime",
+        "knot", "lactation", "machine", "mating press", "mechanical tentacles",
+        "milking machine", "monster", "monstrous", "mounting", "multiple tentacles",
+        "orc", "overwhelmed", "oviposition", "parasite", "probing", "robot", "scared",
+        "size difference", "slime body", "slime girl", "slime", "stomach bulge",
+        "struggling", "surprised", "suspended", "tentacle egg", "tentacle pit",
+        "tentacle sex", "tentacle slime", "tentacles", "translucent slime", "xenomorph",
+        "cum overflow"
+      ],
+      "requires": [
+        "基础模板取 §5.3 双人正戏",
+        "先查 §14.5 再替换男方为非人 + 特殊体位"
+      ],
+      "forbids": [],
+      "notes": "核心公式：异种类型 × 交互方式 × 人类方的反应。核心在「人类 vs 非人」的体型/力量/数量绝对不对等。七类异种各有侧重：触手适合多孔同时侵犯（tentacle pit / multiple tentacles / oviposition）；兽交配 knot + canine penis + mounting + breeding；史莱姆适合溶解/吸收/体内视角（absorption + inside slime + translucent slime + corruption）；兽人（orc/goblin/monster + huge penis + mating press + size difference）适合体型碾压与种付；虫类配 oviposition + egg + parasite + infestation；机械配 milking machine + mechanical tentacles + automated + android；外星配 alien/xenomorph + alien egg + probing + abduction。oviposition（产卵）与 egg 是异种特色结果标签，stomach bulge 与 deep penetration 用来表现穿透感。氛围链：surprised → scared → struggling → overwhelmed → ahegao → egg laying / cum overflow → exhausted。"
+    },
+    {
+      "id": "pet-training",
+      "zh": "调教/宠物",
+      "src": "§14.6 第1978-2006行",
+      "tags": [
+        "arms up", "bell collar", "bit gag", "body writing", "brand", "cage", "cat ears",
+        "cat tail", "collar", "crawling", "crowd", "devoted", "eating from bowl",
+        "empty eyes", "expressionless", "happy", "harness", "humiliation", "indoors",
+        "kennel", "kitten play", "kneeling", "leash", "locked", "nude", "obedient",
+        "on all fours", "on floor", "outdoors", "ownership mark", "panting", "paw gloves",
+        "paw pose", "pet bowl", "pet bowl on floor", "presenting", "public",
+        "puppy play", "spread legs", "submissive", "tail plug", "tail wag", "tally marks",
+        "tattoo", "tongue out", "trapped", "waiting"
+      ],
+      "requires": [
+        "基础模板取 §5.1 单人展示",
+        "先查 §14.6 再加项圈 / 爬行 / 食盆 / 服从表情"
+      ],
+      "forbids": [],
+      "notes": "核心公式：驯化类型 × 服从表现 × 主人/支配者。核心是「人格剥夺 + 动物化」：tag 必须强调非人行为（crawling / on all fours / eating from bowl / paw pose）与服从道具（collar / leash / tail plug / harness）。与 RBQ 的区别：宠物调教保留「主人-宠物」的关系纽带（devoted / obedient / happy / tail wag），RBQ 是彻底弃用的肉块。六类变体：犬化训练（puppy play + collar + leash + crawling + tail plug + panting + tongue out）、猫化训练（kitten play + bell collar + cat ears + paw gloves + cat tail + paw pose + tail wag）、宠物喂食、笼中等待（cage + locked + trapped + waiting）、公共遛狗（public + leash + crawling + outdoors + humiliation + crowd）、展示服从（presenting + spread legs + arms up + kneeling）。氛围链：collar on → leash attached → on all fours → crawling → eating from bowl → obedient → tail wag → public display。"
+    },
+    {
+      "id": "coercion",
+      "zh": "胁迫",
+      "src": "§14.7 第2010-2038行",
+      "tags": [
+        "24/7", "always available", "being watched", "blackmail", "boss",
+        "can't pay back", "can't refuse", "crying", "debt", "desk", "drugged",
+        "economic dependence", "forced prostitution", "forced", "gang rape", "given up",
+        "group blackmail", "gun", "hand covering own mouth", "held down", "hidden camera",
+        "knife", "limp body", "loan shark", "mind break", "multiple boys", "no escape",
+        "no resistance", "office lady", "office", "ongoing", "on recording", "pencil skirt",
+        "power imbalance", "promotion", "rape", "reluctant", "restrained", "scared",
+        "school uniform", "secret", "slave", "spiked drink", "struggling", "surrounded",
+        "tears", "unconscious", "expressionless"
+      ],
+      "requires": [
+        "基础模板取 §5.2 前戏 / §5.3 正戏",
+        "先查 §14.7 再加权力关系 + 把柄 + 抗拒→屈服链"
+      ],
+      "forbids": [],
+      "notes": "核心公式：权力来源 × 胁迫手段 × 屈服程度。核心是「权力的不对等」——不是单纯暴力（那是过激），而是利用弱点/秘密/地位让对方无法拒绝。把柄威胁（hidden camera / on recording / blackmail / secret）是胁迫最独特的标签组合，过激和强奸没有这些要素。六类胁迫：职权胁迫（boss + office lady + blackmail + power imbalance + economic dependence + promotion）、债务胁迫（debt + loan shark + forced prostitution + can't pay back）、把柄威胁、暴力强制（rape + held down + restrained + knife + gun + struggling）、药物迷奸（drugged + unconscious + spiked drink + limp body + no resistance）、集体胁迫（gang rape + multiple boys + surrounded + no escape + group blackmail）。持续控制变体用 ongoing + always available + 24/7 + slave。氛围链：threat → scared → reluctant → forced → struggling → crying → given up → mind break → obedient。"
+    },
+    {
+      "id": "voyeur-exhibition",
+      "zh": "偷窥/展示",
+      "src": "§14.8 第2042-2069行",
+      "tags": [
+        "!", "accidental witness", "battery indicator", "caught", "changing clothes",
+        "chat visible", "computer screen", "couple inside having sex", "couple having sex inside",
+        "donation alert", "door gap", "exhibitionism", "fake screenshot", "from behind",
+        "from outside", "hidden camera", "hidden camera pov", "hiding", "holding phone",
+        "keyhole", "looking at viewer", "masturbating", "mirror", "night", "city lights",
+        "opening door", "peeping", "presenting", "public", "pov", "selfie", "shadow",
+        "showering", "silhouette", "sleeping", "spread legs", "streaming", "surprised",
+        "through window", "unaware", "viewfinder", "voyeurism", "walk-in", "webcam",
+        "window", "audience", "bedroom", "having sex"
+      ],
+      "requires": [
+        "偷窥方向：基础模板取 §5.1 单人，先查 §14.8 再加 peeping / hidden camera / selfie",
+        "展示方向：同样取 §5.1 单人或 §5.3，加 exhibitionism / selfie / webcam / streaming"
+      ],
+      "forbids": [],
+      "notes": "核心公式：看的人 × 被看的人 × 观看渠道。偷窥和展示是同一枚硬币的两面——前者是「不被发现的看」（被看方 unaware / sleeping / showering / changing clothes），后者是「故意给人看」（展示方 exhibitionism + looking at viewer + presenting + selfie + webcam）。偷窥方向配 hidden camera / fake screenshot / viewfinder / battery indicator 制造真实感；展示方向配 selfie / mirror / holding phone / webcam / streaming / chat visible / donation alert 制造自媒体感。六类变体：窗外偷窥（from outside + through window + peeping + voyeurism + unaware）、门缝发现（opening door + walk-in + caught + surprised + !）、偷拍摄像头、自拍展示、直播、暗处窥视（peeping + hiding + from behind + shadow + silhouette + keyhole）。氛围链：watching → hidden → unaware → peeping → discovered → caught → ! → embarrassed。"
+    },
+    {
+      "id": "aftermath",
+      "zh": "事后",
+      "src": "§14.9 第2073-2102行",
+      "tags": [
+        "after sex", "afterglow", "another round", "ashamed", "asleep", "awkward",
+        "checking", "closed eyes", "covering face", "crumpled sheets", "cuddling",
+        "cum inside", "cum on body", "cum on sheets", "cum pool", "cum string", "cumdrip",
+        "disheveled clothes", "exhausted", "exhausted but willing", "getting dressed",
+        "greedy", "heavy breathing", "holding each other", "hotel", "hurry", "insertion",
+        "leaving", "lying on bed", "messy hair", "morning after pill", "morning",
+        "morning light", "one night stand", "partially undressed", "peaceful",
+        "pregnancy test", "regret", "satisfied", "shower", "sleeping", "soap", "spooning",
+        "steam", "tender", "tired", "tissue", "unworn clothes", "used condom",
+        "used tissue", "condom wrapper", "washing each other", "wet", "wine glass",
+        "cigarette", "anxious", "empty eyes"
+      ],
+      "requires": [
+        "基础模板取 §5.1 单人 / §5.3 双人",
+        "无性行为标签，重残留 + 情感余韵"
+      ],
+      "forbids": [],
+      "notes": "核心公式：结束后的状态 × 残留痕迹 × 情感余韵。这是少数可以合法写大量 cum 残留却不需要写性行为的场景——液体槽位用 cum inside / cumdrip / cum on body / cum on sheets / cum pool / used condom 撑起「刚做完」的证据。分两个情感方向：温存（cuddling + tender + afterglow + spooning + peaceful）和空虚（regret + ashamed + used condom + pregnancy test）。七类变体：床上瘫软、浴室清洗（shower + washing each other + wet + steam + soap）、拥抱入睡、穿衣离开（getting dressed + leaving + hurry + hotel + awkward + one night stand）、再次插入（another round + insertion + exhausted but willing + greedy + cum string）、事后羞耻（ashamed + covering face + regret + tissue + pregnancy test）、事后检查（checking + morning after pill + anxious）。氛围链：heavy breathing → afterglow → exhausted → satisfied → cuddling → peaceful → asleep / regret。"
+    },
+    {
+      "id": "casual-daily",
+      "zh": "另类日常",
+      "src": "§14.10 第2106-2126行",
+      "tags": [
+        "bottomless", "butt plug", "casual nudity", "casual", "cleaning", "closed eyes",
+        "comfortable", "cooking", "couch", "cum on face", "daily routine", "egg vibrator",
+        "erotic underneath", "expressionless", "facial mask", "girl on top", "holding controller",
+        "holding cooking pot", "housework", "implied sex", "inserted", "kitchen",
+        "lingerie under clothes", "looking back", "morning routine", "morning", "natural state",
+        "natural", "nobody knows", "nude", "naked apron", "office lady", "playing games",
+        "pretending to sleep", "provocative pose", "public", "remote controlled", "secret",
+        "tail plug", "teasing", "trying to focus", "under clothes", "waiting"
+      ],
+      "requires": [
+        "基础模板取 §5.1 单人 / §5.3 双人",
+        "表情必须用 natural / casual / expressionless"
+      ],
+      "forbids": [
+        "任何兴奋/羞耻/高潮类表情标签"
+      ],
+      "notes": "核心公式：日常场景 + 色情改造 + 自然态度 = 另类日常。核心是「将色情正常化」——表情只能走 natural / casual / expressionless，绝对不要用兴奋、羞耻、高潮类标签，否则整类垮掉。日常场景道具（cooking pot / washing machine / laptop / game controller）反而是关键锚点，比服装更能定住「日常」基调。与暴露露出的区别：另类日常不追求「被发现」的刺激，追求「这就是日常」的理所当然感。八类变体：裸体家务（nude + housework + cooking + cleaning + casual nudity）、隐蔽玩具外出（egg vibrator + remote controlled + inserted + trying to focus + secret）、肛塞日常、情趣内衣通勤（lingerie under clothes + office lady + nobody knows）、裸体围裙做饭、假装睡着诱惑（pretending to sleep + closed eyes + provocative pose + teasing + waiting）、精液美容（cum on face + facial mask + morning routine）、游戏中被骑乘（playing games + holding controller + implied sex + girl on top + expressionless）。氛围链：daily routine → casual → secret → normal on surface → erotic underneath → nobody knows。"
+    },
+    {
+      "id": "onee-shota",
+      "zh": "大车小孩",
+      "src": "§14.11 第2130-2157行",
+      "tags": [
+        "1boy", "1girl", "age difference", "blush", "boy on top", "breastfeeding",
+        "cowgirl position", "curvy", "first time", "gentle", "girl on top", "group sex",
+        "harem", "height difference", "hetero", "huge size difference", "lactation",
+        "large breasts", "large breasts small penis", "lifting", "mating press",
+        "mature female", "motherly figure", "motherly", "multiple girls", "nervous",
+        "onee-shota", "passionate", "petite male", "shota", "size difference",
+        "small penis", "tall", "teaching", "guided", "shy"
+      ],
+      "requires": [
+        "基础模板取 §5.3 双人正戏",
+        "先查 §14.11 再加 onee-shota / size difference / age difference"
+      ],
+      "forbids": [],
+      "notes": "核心公式：体型反差 × 年龄差 × 主导方。核心是「体型 × 年龄」的双重反差——视觉上走 maximal size difference（large breasts + small penis + height difference + huge size difference），心理上走经验差（mature female + teaching + guided + gentle 对 shota + nervous + first time）。与常规体型的区别：必须显式带 onee-shota，或同时给出明确的 age difference + size difference，否则这套配方不成立。五类变体：正太主动后入（shota + sex from behind + onee-shota + small penis + boy on top）、大姐姐骑乘（onee-shota + girl on top + cowgirl position + mature female + teaching）、母性授乳（breastfeeding + onee-shota + lactation + large breasts + motherly figure）、体格碾压（size difference + height difference + petite male + lifting + huge size difference）、多对一服务（multiple girls + 1boy + shota + group sex + harem + mature female）。氛围链：shy → nervous → first time → teaching → guided → gentle → passionate。"
+    },
+    {
+      "id": "hidden-sex",
+      "zh": "隐奸",
+      "src": "§14.12 第2161-2202行",
+      "tags": [
+        "against glass", "apartment", "apartment window", "ass only", "breast press",
+        "bulge", "cellphone photo", "collarbone", "cum drip", "cum in pussy", "cum string",
+        "dark", "darkness", "drinking", "erection under clothes", "expressionless",
+        "fake phone screenshot", "fake screenshot", "feet", "feet only", "footjob",
+        "frosted glass", "from outside", "hanging legs", "head out of frame",
+        "heavy breathing but silent", "implied after sex", "implied fellatio", "implied sex",
+        "in alley", "in cubicle", "in locker", "lifting person", "lower body only",
+        "lower body", "motion lines", "no shoes", "no panties", "normal on surface",
+        "on couch", "open mouth", "out-of-frame censoring", "pov across table",
+        "playing games", "pussy juice trail", "pussy juice", "recording", "restaurant",
+        "sitting on lap", "smile", "speech bubble", "stomach bulge", "stealth sex",
+        "steam from under covers", "steam", "talking", "teeth", "toe scrunch", "toes",
+        "tongue out", "trembling", "two-footed footjob", "under covers", "under desk",
+        "under table", "upper body in trash can", "upper body normal, lower body exposed",
+        "upper body normal, under desk", "upper body normal", "upper body", "used condom on ass",
+        "view between legs", "viewfinder", "wet", "x-ray", "night", "sex from behind",
+        "girl on top", "cowgirl position", "nude", "couch"
+      ],
+      "requires": [
+        "基础模板取 §5.2 前戏 / §5.3 正戏",
+        "先查 §14.12 再加 head out of frame / under covers / implied sex"
+      ],
+      "forbids": [
+        "peeping",
+        "voyeurism",
+        "hidden camera"
+      ],
+      "notes": "核心公式：可见部分 + 遮挡手法 + 暗示线索 = 观众脑补完整画面。标签精度要求极高，构图类标签用错一个就从「隐」变成「露」。五类遮挡手法：画面外裁剪（head out of frame / upper body out of frame / lower body only / feet only / ass only / out-of-frame censoring）、上下分裂（upper body normal, lower body exposed / under desk / table）、介质遮挡（against glass, frosted glass / under covers / through window, from outside / in locker / in cubicle / shower curtain）、伪媒介视角（fake screenshot / viewfinder, recording / cellphone photo / speech bubble / implied sex）、暗示性构图（view between legs / through legs / implied fellatio / implied after sex）。五条铁律：「隐」的关键在裁剪，不画脸就永远有想象空间；上下分裂时上半身必须零性暗示标签，否则「正常」崩塌；介质遮挡不能太透，frosted glass 比 glass 更隐，under covers 必须配 dark 或 at night；暗示靠液体，pussy juice trail / cum drip / cum string 是最强证据；隐奸不是偷窥，不要加 peeping / voyeurism / hidden camera。氛围链：normal on surface → hidden underneath → trembling → pussy juice visible → cum drip → heavy breathing but silent → discovered? → !"
+    }
+  ]
+}
